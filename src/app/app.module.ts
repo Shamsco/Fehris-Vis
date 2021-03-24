@@ -1,16 +1,40 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
+import { HttpClientModule } from '@angular/common/http';
 import { AppComponent } from './app.component';
+import { BarComponent } from './bar/bar.component';
+import { PieComponent } from './pie/pie.component';
+import { ScatterComponent } from './scatter/scatter.component';
+import { ArcComponent } from './arc/arc.component';
+import { DataServiceService } from './data-service.service';
+import { RouterModule, Routes } from '@angular/router';
+import { ForceDirectedComponent } from './force-directed/force-directed.component';
+import { TestArcComponent } from './test-arc/test-arc.component';
+import { DisjointedGraphComponent } from './disjointed-graph/disjointed-graph.component';
+import { GraphViewComponent } from './graph-view/graph-view.component';
+
+
+const routes: Routes = [];
+
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    BarComponent,
+    PieComponent,
+    ScatterComponent,
+    ArcComponent,
+    ForceDirectedComponent,
+    TestArcComponent,
+    DisjointedGraphComponent,
+    GraphViewComponent,
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    HttpClientModule,
+    RouterModule.forRoot(routes)
   ],
-  providers: [],
+  providers: [DataServiceService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
