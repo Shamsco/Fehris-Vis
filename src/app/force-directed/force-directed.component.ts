@@ -381,7 +381,9 @@ export class ForceDirectedComponent implements OnInit {
 
     const svg = d3.select("figure#Force-Directed")
       .append("svg")
-      .attr("viewBox", `0, 0, ${this.width}, ${this.height}`);
+      .attr("width", this.width)
+      .attr("height", this.height)
+      //.attr("viewBox", `0, 0, ${this.width}, ${this.height}`);
 
     const link = svg.append("g")
         .attr("stroke", "#999")

@@ -2,7 +2,10 @@ import { TypeofExpr } from '@angular/compiler';
 import { stringify } from '@angular/compiler/src/util';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
+import { timeParse } from 'd3';
 import { GraphViewComponent } from "../graph-view/graph-view.component";
+import d3tip from 'd3-tip';
+
 @Component({
   selector: 'app-disjointed-graph',
   templateUrl: './disjointed-graph.component.html',
@@ -390,77 +393,73 @@ export class DisjointedGraphComponent implements OnInit {
         .force("charge", d3.forceManyBody())
         .force("x", d3.forceX())
         .force("y", d3.forceY());
-        
 
-    const svg = d3.select("figure#Disjointed")
-    .append("svg")
-    .attr("width", this.width / 4)
-    .attr("height", this.height / 4)
-    .attr("z" , "1")
-    .attr("transform", `translate(${this.width - this.width / 4},${-this.height + 30})`)
-    .attr('class', 'preview')
-      .append("g")
-      .attr('width', this.width / 2 )
-      .attr('height', this.height / 2)
-      .attr("z" , "1")
-      .attr("transform", `translate(${this.width / 8},${this.height / 8})`)
+    const svg = d3.select("div.tooltip")
+        .append("svg")
+            .attr("width", this.width / 4)
+            .attr("height", this.height / 4)
+            .attr("viewBox", `0, 0, ${this.width/4}, ${this.height/4}`)
+            .attr("z" , "1")
+            .attr("x",this.width)
+            .attr("y",this.height/4)
+            .attr('class', 'preview')
+        .append("g")
+            .attr('width', this.width / 2 )
+            .attr('height', this.height / 2)
+            .attr("z" , "1")
+            .attr("transform", `translate(${this.width / 8},${this.height / 8})`)
     d3.select(".preview")
-      .append("rect")
-      .attr("width",  this.width / 4)
-      .attr("height", this.height / 4)
-      .attr("fill", "none")
-      .attr("stroke", "black")
-      .attr("z", "-1")
-    d3.select(".preview")
-    .append("rect")
-    .attr("width",  20)
-    .attr("height", 20)
-    .attr("transform", `translate(${this.width/4 - 20},0)`)
-    .attr('class', 'preview')
-    //.attr('y', -this.width / 3)
-    //.attr('x' , this.height / 3)
-    .text("close")
-    .on("click" , d => {
-      this.svg.selectAll(`.${id}`)
-        .classed("active",false)
-      d3.selectAll('.preview').remove();
-    })
+        .append("rect")
+            .attr("width",  20)
+            .attr("height", 20)
+            .attr("transform", `translate(${this.width/4 - 21},1)`)
+            .attr('class', 'preview')
+            .attr("rx",5)
+            .attr("ry",5)
+            .attr("style", "fill:red;stroke:black;stroke-width:1")
+            .on("click" , d => {
+                this.svg.selectAll(`.pactive`)
+                    .classed("pactive",false)
+                d3.select("div.tooltip")
+                    .style("opacity", 0)
+                d3.selectAll('.preview').remove();
+            })
     const link = svg.append("g")
         .attr("stroke", "#999")
         .attr("stroke-opacity", 0.6)
         .attr("z" , "1")
-      .selectAll("line")
-      .data(links)
-      .join("line")
-        .attr("stroke-width", d => Math.sqrt(d.value))
-        .attr('class', d => d.source.id.replace(/\./g,' ') + " " + d.target.id.replace(/\./g,' ') + " dj" + d.source.group)
-        .attr("z" , "1")
+        .selectAll("line")
+        .data(links)
+        .join("line")
+            .attr("stroke-width", d => Math.sqrt(d.value))
+            .attr('class', d => d.source.id.replace(/\./g,'') + " " + d.target.id.replace(/\./g,'') + " dj" + d.source.group)
+            .attr("z" , "1")
     const node = svg.append("g")
         .attr("stroke", "#fff")
         .attr("stroke-width", 1.5)
         .attr("z" , "1")
-      .selectAll("circle")
-      .data(nodes)
-      .join("circle")
-        .attr("r", 5)
-        .attr('class', d => d.id.replace(/\./g,' ') + " " + d.id.replace(/\./g,' ') + " dj" + d.group)
-        .attr("fill", d => this.color(d.group))
-        .attr("z" , "1")
-        .call(this.drag(simulation))
-        .on("mouseover", (event, d) => {
-          svg.selectAll(`line.${d.id}`)
-            .attr('stroke-opacity', 1)
-            .attr('stroke','#000')
-          svg.selectAll(`circle.${d.id}`)
-            .attr('stroke','#000')
-        })
-        .on("mouseout", (event, d) => {
-          svg.selectAll(`line.${d.id}`)
-            .attr('stroke-opacity', 0.6)
-            .attr('stroke','#999')
-          svg.selectAll(`circle.${d.id}`)
-            .attr('stroke','#fff')
-        });
+        .selectAll("circle")
+        .data(nodes)
+        .join("circle")
+            .attr("r", 5)
+            .attr('class', d => d.id.replace(/\./g,'') + " " + d.id.replace(/\./g,'') + " dj" + d.group)
+            .attr("fill", d => this.color(d.group))
+            .attr("z" , "1")
+            .call(this.drag(simulation))
+            .on("mouseover", (event, d) => {
+                svg.selectAll(`line.${d.id.replace(/\./g,'')}`)
+                    .attr('stroke-opacity', 1)
+                    .attr('stroke','#000')
+                svg.selectAll(`circle.${d.id.replace(/\./g,'')}`)
+                    .attr('stroke','#000')
+            })
+            .on("mouseout", (event, d) => {
+                svg.selectAll(`line.${d.id.replace(/\./g,'')}`)
+                    .attr('stroke-opacity', 0.6)
+                    .attr('stroke','#999')
+                svg.selectAll(`circle.${d.id.replace(/\./g,'')}`)
+                    .attr('stroke','#fff')
+            });
     node.append("title")
         .text(d => d.id);
 
@@ -475,7 +474,7 @@ export class DisjointedGraphComponent implements OnInit {
           .attr("cx", d => d.x)
           .attr("cy", d => d.y);
 });
-  }
+}
   private createGraph(): void{
     const links = this.links.map(d => Object.create(d));
     const nodes = this.nodes.map(d => Object.create(d));
@@ -486,56 +485,90 @@ export class DisjointedGraphComponent implements OnInit {
         .force("y", d3.forceY());
         
 
-        this.svg = d3.select("figure#Disjointed")
-      .append("svg")
-      .attr("viewBox", `${-this.width / 2}, ${-this.height / 2}, ${this.width}, ${this.height}`)
-      .attr('class', 'main');
-      this.svg.append("style").text(`
-      line.active {
-        stroke: #000;
-        stroke-opacity: 1;
-      } 
-      circle.active{
-        stroke: #000;
+    this.svg = d3.select("figure#Disjointed")
+        .append("svg")
+            .attr("viewBox", `${-this.width + this.width/2}, ${-this.height + this.height/2}, ${this.width}, ${this.height}`)
+            .attr('class', 'main');
+    this.svg.append("style").text(`
+        line.pactive {
+          stroke: #000;
+          stroke-opacity: 1;
+        } 
+        circle.pactive{
+          stroke: #000;
+        }
+        line.gactive {
+          stroke: #000;
+          stroke-opacity: 1;
+        } 
+        circle.gactive{
+          stroke: #000;
+        }
+        text.gactive{
+          font-weight: bold;
+          font-size: 15;
+        }
+        div.tooltip {	
+          position: absolute;					
+          padding: 2px;					
+          background: lightsteelblue;	
+          border: 0px;		
+          border-radius: 8px;			
+          pointer-events: auto;			
       }`);
+
     const link = this.svg.append("g")
         .attr("stroke", "#999")
         .attr("stroke-opacity", 0.6)
-      .selectAll("line")
-      .data(links)
-      .join("line")
-        .attr("stroke-width", d => Math.sqrt(d.value))
-        .attr('class', d => d.source.id.replace(/\./g,' ') + " " + d.target.id.replace(/\./g,' ') + " dj" + d.source.group)
+        .selectAll("line")
+        .data(links)
+        .join("line")
+            .attr("stroke-width", d => Math.sqrt(d.value))
+            .attr('class', d => d.source.id.replace(/\./g,'') + " " + d.target.id.replace(/\./g,'') + " dj" + d.source.group)
+    
+    var div = d3.select("figure#Disjointed").append("div")	
+        .attr("class", "tooltip")				
+        .style("opacity", 0)
+        .attr("width", this.width / 4)
+        .attr("height", this.height / 4)
+    
     const node = this.svg.append("g")
         .attr("stroke", "#fff")
         .attr("stroke-width", 1.5)
-      .selectAll("circle")
-      .data(nodes)
-      .join("circle")
-        .attr("r", 5)
-        .attr('class', d => d.id.replace(/\./g,' ') + " " + d.id.replace(/\./g,' ') + " dj" + d.group)
-        .attr("fill", d => this.color(d.group))
-        .call(this.drag(simulation))
-        .on("mouseover", (event, d) => {
-          this.svg.selectAll(`line.${d.id}`)
-            .attr('stroke-opacity', 1)
-            .attr('stroke','#000')
-            this.svg.selectAll(`circle.${d.id}`)
-            .attr('stroke','#000')
-        })
-        .on("mouseout", (event, d) => {
-          this.svg.selectAll(`line.${d.id}`)
-            .attr('stroke-opacity', 0.6)
-            .attr('stroke','#999')
-            this.svg.selectAll(`circle.${d.id}`)
-            .attr('stroke','#fff')
-        })
-        .on("click", (event, d) => {
-          d3.selectAll('.preview').remove();
-          this.svg.selectAll(`.${d.id}`)
-            .classed("active",true)
-          this.createPreview(d.id);
-        });
+        .selectAll("circle")
+        .data(nodes)
+        .join("circle")
+            .attr("r", 5)
+            .attr('class', d => d.id.replace(/\./g,'') + " " + d.id.replace(/\./g,'') + " dj" + d.group)
+            .attr("fill", d => this.color(d.group))
+            .call(this.drag(simulation))
+            .on("mouseover", (event, d) => {
+                this.svg.selectAll(`line.${d.id.replace(/\./g,'')}`)
+                    .attr('stroke-opacity', 1)
+                    .attr('stroke','#000')
+                this.svg.selectAll(`circle.${d.id.replace(/\./g,'')}`)
+                    .attr('stroke','#000')
+            })
+            .on("mouseout", (event, d) => {
+                this.svg.selectAll(`line.${d.id.replace(/\./g,'')}`)
+                      .attr('stroke-opacity', 0.6)
+                      .attr('stroke','#999')
+                this.svg.selectAll(`circle.${d.id.replace(/\./g,'')}`)
+                      .attr('stroke','#fff')
+            })
+            .on("click", (event, d) => {
+                div.transition()
+                    .duration(200) 
+                    .style("opacity",0.9)
+                        .style("left", (event.pageX) + "px")		
+                        .style("top", (event.pageY - 28) + "px");	
+                d3.selectAll('.preview').remove();
+                d3.selectAll(".pactive")
+                    .classed("pactive",false)
+                this.svg.selectAll(`.${d.id.replace(/\./g,'')}`)
+                    .classed("pactive",true)
+                this.createPreview(d.id);
+            });
     node.append("title")
         .text(d => d.id);
 
@@ -554,57 +587,58 @@ export class DisjointedGraphComponent implements OnInit {
     grouparr = [... new Set(grouparr)]
     let stateArray = Array<boolean>(grouparr.length).fill(false);
     const legend = this.svg.append("g")
-    .attr("fill", "none")
-    .attr("pointer-events", "all")
-    .attr("font-family", "sans-serif")
-    .attr("font-size", 10)
-    .attr("text-anchor", "start")
-    .selectAll("g")
-    .data(grouparr)
-    .join("g")
-      .attr("transform", d => `translate(${-this.width/2 + 10},${-this.height/4 + (d * 10) + 5})`)
-      .call(g => g.append("text")
-        .attr("x", 6)
-        .attr("dy", "0.35em")
-        .attr('class', d => "dj" + d)
-        .attr("fill", d => d3.lab(this.color(d)))
-        .text(d => "Group " + d))
-      .call(g => g.append("circle")
-        .attr("r", 3)
-        .attr('class', d => "dj" + d)
-        .attr("fill", d => this.color(d)))
-        .on("click", (event, d) => {
-          if(stateArray[d] === true){
-            stateArray[d] = false
-            this.svg.selectAll(`line.dj${d}`)
-              .attr("stroke-opacity", 0.6)
-              .attr("stroke", "#999");
-            this.svg.selectAll(`circle.dj${d}`)
-              .attr("stroke", '#fff')
-            this.svg.selectAll(`text.dj${d}`)
-              .attr("fill", d3.lab(this.color(d)))
-              .attr('font-weight', "none")
-              .attr("font-size", 10)
-          }
-          else if(stateArray[d] === false){
-            stateArray[d] = true
-            this.svg.selectAll(`line.dj${d}`)
-              .attr('stroke-opacity', 1)
-              .attr("stroke", d3.lab(this.color(d)).darker(1))
-            this.svg.selectAll(`circle.dj${d}`)
-              .attr("stroke",'black')
-            this.svg.selectAll(`text.dj${d}`)
-              .attr('font-weight', "bold")
-              .attr("font-size", 15)
-          }
-        });
+        .attr("fill", "none")
+        .attr("pointer-events", "all")
+        .attr("font-family", "sans-serif")
+        .attr("font-size", 10)
+        .attr("text-anchor", "start")
+        .selectAll("g")
+        .data(grouparr)
+        .join("g")
+            .attr("transform", d => `translate(${-this.width/2 + 10},${-this.height/4 + (d * 10) + 5})`)
+            .call(g => g.append("text")
+                .attr("x", 6)
+                .attr("dy", "0.35em")
+                .attr('class', d => "dj" + d)
+                .attr("fill", d => d3.lab(this.color(d)))
+                .text(d => "Group " + d))
+            .call(g => g.append("circle")
+                .attr("r", 3)
+                .attr('class', d => "dj" + d)
+                .attr("fill", d => this.color(d)))
+                .on("click", (event, d) => {
+                    if(stateArray[d] === true){
+                        stateArray[d] = false
+                    // this.svg.selectAll(`line.dj${d}`)
+                    //   .attr("stroke-opacity", 0.6)
+                    //   .attr("stroke", "#999");
+                    // this.svg.selectAll(`circle.dj${d}`)
+                    //   .attr("stroke", '#fff')
+                    // this.svg.selectAll(`text.dj${d}`)
+                    //   .attr("fill", d3.lab(this.color(d)))
+                    //   .attr('font-weight', "none")
+                    //   .attr("font-size", 10)
+                      this.svg.selectAll(`.dj${d}`)
+                          .classed("gactive",false)
+                  }
+                  else if(stateArray[d] === false){
+                      stateArray[d] = true
+                    // this.svg.selectAll(`line.dj${d}`)
+                    //   .attr('stroke-opacity', 1)
+                    //   .attr("stroke", d3.lab(this.color(d)).darker(1))
+                    // this.svg.selectAll(`circle.dj${d}`)
+                    //   .attr("stroke",'black')
+                    // this.svg.selectAll(`text.dj${d}`)
+                    //   .attr('font-weight', "bold")
+                    //   .attr("font-size", 15)
+                      this.svg.selectAll(`.dj${d}`)
+                          .classed("gactive",true)
+                  }
+              });
   }
-  constructor() { }
-  @ViewChild('modal', {static: false}) modal: GraphViewComponent
 
-  openModal() {
-    this.modal.open();
-  }
+  constructor() { }
+
   ngOnInit(): void {
     this.createGraph();
   }
