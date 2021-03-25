@@ -560,8 +560,8 @@ export class DisjointedGraphComponent implements OnInit {
                 div.transition()
                     .duration(200) 
                     .style("opacity",0.9)
-                        .style("left", (event.pageX) + "px")		
-                        .style("top", (event.pageY - 28) + "px");	
+                        .style("left", (event.pageX + this.width / 8) + "px")		
+                        .style("top", (event.pageY - this.height / 3) + "px");	
                 d3.selectAll('.preview').remove();
                 d3.selectAll(".pactive")
                     .classed("pactive",false)
@@ -609,28 +609,11 @@ export class DisjointedGraphComponent implements OnInit {
                 .on("click", (event, d) => {
                     if(stateArray[d] === true){
                         stateArray[d] = false
-                    // this.svg.selectAll(`line.dj${d}`)
-                    //   .attr("stroke-opacity", 0.6)
-                    //   .attr("stroke", "#999");
-                    // this.svg.selectAll(`circle.dj${d}`)
-                    //   .attr("stroke", '#fff')
-                    // this.svg.selectAll(`text.dj${d}`)
-                    //   .attr("fill", d3.lab(this.color(d)))
-                    //   .attr('font-weight', "none")
-                    //   .attr("font-size", 10)
                       this.svg.selectAll(`.dj${d}`)
                           .classed("gactive",false)
                   }
                   else if(stateArray[d] === false){
                       stateArray[d] = true
-                    // this.svg.selectAll(`line.dj${d}`)
-                    //   .attr('stroke-opacity', 1)
-                    //   .attr("stroke", d3.lab(this.color(d)).darker(1))
-                    // this.svg.selectAll(`circle.dj${d}`)
-                    //   .attr("stroke",'black')
-                    // this.svg.selectAll(`text.dj${d}`)
-                    //   .attr('font-weight', "bold")
-                    //   .attr("font-size", 15)
                       this.svg.selectAll(`.dj${d}`)
                           .classed("gactive",true)
                   }
