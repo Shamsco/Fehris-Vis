@@ -344,7 +344,6 @@ export class DisjointedGraphComponent implements OnInit {
     {"source": "Mme.Hucheloup", "target": "Gavroche", "value": 1},
     {"source": "Mme.Hucheloup", "target": "Enjolras", "value": 1}
   ];
-  testing : number = 7;
   private svg;
   private height = 680;
   private width = 680;
@@ -375,7 +374,7 @@ export class DisjointedGraphComponent implements OnInit {
         .on("end", dragended);
   }
   private createPreview(id): void{
-
+    // Data Processing to use only Nodes linked to selected Node
     const linksFilter = this.links.filter((x => x.source === id || x.target === id));
     var arr = new Array<{id: string, group: number}>();
     arr.push(this.nodes.find(x => x.id === id));
@@ -394,7 +393,8 @@ export class DisjointedGraphComponent implements OnInit {
         .force("charge", d3.forceManyBody())
         .force("x", d3.forceX())
         .force("y", d3.forceY());
-
+      //Creating Graph in Tooltip
+    // SVG for Tooltip
     const svg = d3.select("div.nodeTooltip")
         .append("svg")
             .attr("width", this.width / 4)
@@ -409,6 +409,7 @@ export class DisjointedGraphComponent implements OnInit {
             .attr('height', this.height / 2)
             .attr("z" , "1")
             .attr("transform", `translate(${this.width / 8},${this.height / 8})`)
+            // Rect for Close button
     d3.select(".preview")
         .append("rect")
             .attr("width",  20)
@@ -419,12 +420,14 @@ export class DisjointedGraphComponent implements OnInit {
             .attr("ry",5)
             .attr("style", "fill:red;stroke:black;stroke-width:1")
             .on("click" , d => {
+              // Close button 
                 this.svg.selectAll(`.pactive`)
                     .classed("pactive",false)
                 d3.select("div.nodeTooltip")
                     .style("opacity", 0)
                 d3.selectAll('.preview').remove();
             })
+            //Tool tip links
     const link = svg.append("g")
         .attr("stroke", "#999")
         .attr("stroke-opacity", 0.6)
@@ -435,6 +438,7 @@ export class DisjointedGraphComponent implements OnInit {
             .attr("stroke-width", d => Math.sqrt(d.value))
             .attr('class', d => d.source.id.replace(/\./g,'') + " " + d.target.id.replace(/\./g,'') + " dj" + d.source.group)
             .attr("z" , "1")
+            // Tool tip Nodes
     const node = svg.append("g")
         .attr("stroke", "#fff")
         .attr("stroke-width", 1.5)
@@ -463,7 +467,7 @@ export class DisjointedGraphComponent implements OnInit {
             });
     node.append("title")
         .text(d => d.id);
-
+// Position update for graph
     simulation.on("tick", () => {
       link
           .attr("x1", d => d.source.x)
@@ -476,6 +480,8 @@ export class DisjointedGraphComponent implements OnInit {
           .attr("cy", d => d.y);
 });
 }
+
+// Creates the Force-Directed Graph
   private createGraph(): void{
     const links = this.links.map(d => Object.create(d));
     const nodes = this.nodes.map(d => Object.create(d));
@@ -485,11 +491,14 @@ export class DisjointedGraphComponent implements OnInit {
         .force("x", d3.forceX())
         .force("y", d3.forceY());
         
-
+    // Main SVG
     this.svg = d3.select("figure#Disjointed")
         .append("svg")
             .attr("viewBox", `${-this.width + this.width/2}, ${-this.height + this.height/2}, ${this.width}, ${this.height}`)
-            .attr('class', 'main');
+            .attr('class', 'main')
+        .style("border", "1px solid black");
+
+    // Main SVG styling
     this.svg.append("style").text(`
         line.pactive {
           stroke: #000;
@@ -517,7 +526,7 @@ export class DisjointedGraphComponent implements OnInit {
           border-radius: 8px;			
           pointer-events: auto;			
       }`);
-
+      // Graph Links
     const link = this.svg.append("g")
         .attr("stroke", "#999")
         .attr("stroke-opacity", 0.6)
@@ -527,12 +536,16 @@ export class DisjointedGraphComponent implements OnInit {
             .attr("stroke-width", d => Math.sqrt(d.value))
             .attr('class', d => d.source.id.replace(/\./g,'') + " " + d.target.id.replace(/\./g,'') + " dj" + d.source.group)
     
+    
+            //Container for Tooltip
     const div = d3.select("figure#Disjointed").append("div")	
         .attr("class", "tooltip nodeTooltip")				
         .style("opacity", 0)
         .attr("width", this.width / 4)
         .attr("height", this.height / 4)
-
+    
+    
+        //Graph Nodes 
     const node = this.svg.append("g")
         .attr("stroke", "#fff")
         .attr("stroke-width", 1.5)
@@ -542,7 +555,7 @@ export class DisjointedGraphComponent implements OnInit {
             .attr("r", d => d.group + 3)
             .attr('class', d => d.id.replace(/\./g,'') + " " + d.id.replace(/\./g,'') + " dj" + d.group)
             .attr("stroke", d => this.color(d.group))
-            .attr("stroke-width", d => d.group)
+            .attr("stroke-width", d => d.group + 1)
             .attr("fill", d => this.color(d.group + 1))
             .call(this.drag(simulation))
             .on("mouseover", (event, d) => {
@@ -573,11 +586,11 @@ export class DisjointedGraphComponent implements OnInit {
                 this.createPreview(d.id);
             })
             .call(c => c.append("circle")
-                .attr("r",3)
-                .attr("fill", d => this.color(d.group + 1)));
+                .attr("r",d=>d.group + 1)
+                .attr("fill", d => this.color(d.group + 2)));
     node.append("title")
         .text(d => d.id);
-    
+    // Position updates for Graph
     simulation.on("tick", () => {
       link
           .attr("x1", d => d.source.x)
@@ -589,6 +602,7 @@ export class DisjointedGraphComponent implements OnInit {
           .attr("cx", d => d.x)
           .attr("cy", d => d.y);
 });
+// Show Groups Button 
 let displayState: boolean = false;
 const gDisplay = d3.select("figure#Disjointed").append("div")
         .attr("class", "tooltip gTooltip")
@@ -608,6 +622,8 @@ const gDisplay = d3.select("figure#Disjointed").append("div")
           }
 
         })
+
+    // Legend
     let grouparr = nodes.map(d => d.group);
     grouparr = [... new Set(grouparr)]
     let stateArray = Array<boolean>(grouparr.length).fill(false);
