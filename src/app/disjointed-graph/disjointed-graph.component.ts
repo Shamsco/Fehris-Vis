@@ -541,7 +541,9 @@ export class DisjointedGraphComponent implements OnInit {
         .join("circle")
             .attr("r", d => d.group + 3)
             .attr('class', d => d.id.replace(/\./g,'') + " " + d.id.replace(/\./g,'') + " dj" + d.group)
-            .attr("fill", d => this.color(d.group))
+            .attr("stroke", d => this.color(d.group))
+            .attr("stroke-width", d => d.group)
+            .attr("fill", d => this.color(d.group + 1))
             .call(this.drag(simulation))
             .on("mouseover", (event, d) => {
                 this.svg.selectAll(`line.${d.id.replace(/\./g,'')}`)
@@ -569,10 +571,13 @@ export class DisjointedGraphComponent implements OnInit {
                 this.svg.selectAll(`.${d.id.replace(/\./g,'')}`)
                     .classed("pactive",true)
                 this.createPreview(d.id);
-            });
+            })
+            .call(c => c.append("circle")
+                .attr("r",3)
+                .attr("fill", d => this.color(d.group + 1)));
     node.append("title")
         .text(d => d.id);
-
+    
     simulation.on("tick", () => {
       link
           .attr("x1", d => d.source.x)
