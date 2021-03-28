@@ -344,6 +344,7 @@ export class DisjointedGraphComponent implements OnInit {
     {"source": "Mme.Hucheloup", "target": "Gavroche", "value": 1},
     {"source": "Mme.Hucheloup", "target": "Enjolras", "value": 1}
   ];
+  testing : number = 7;
   private svg;
   private height = 680;
   private width = 680;
@@ -394,7 +395,7 @@ export class DisjointedGraphComponent implements OnInit {
         .force("x", d3.forceX())
         .force("y", d3.forceY());
 
-    const svg = d3.select("div.tooltip")
+    const svg = d3.select("div.nodeTooltip")
         .append("svg")
             .attr("width", this.width / 4)
             .attr("height", this.height / 4)
@@ -420,7 +421,7 @@ export class DisjointedGraphComponent implements OnInit {
             .on("click" , d => {
                 this.svg.selectAll(`.pactive`)
                     .classed("pactive",false)
-                d3.select("div.tooltip")
+                d3.select("div.nodeTooltip")
                     .style("opacity", 0)
                 d3.selectAll('.preview').remove();
             })
@@ -526,19 +527,19 @@ export class DisjointedGraphComponent implements OnInit {
             .attr("stroke-width", d => Math.sqrt(d.value))
             .attr('class', d => d.source.id.replace(/\./g,'') + " " + d.target.id.replace(/\./g,'') + " dj" + d.source.group)
     
-    var div = d3.select("figure#Disjointed").append("div")	
-        .attr("class", "tooltip")				
+    const div = d3.select("figure#Disjointed").append("div")	
+        .attr("class", "tooltip nodeTooltip")				
         .style("opacity", 0)
         .attr("width", this.width / 4)
         .attr("height", this.height / 4)
-    
+
     const node = this.svg.append("g")
         .attr("stroke", "#fff")
         .attr("stroke-width", 1.5)
         .selectAll("circle")
         .data(nodes)
         .join("circle")
-            .attr("r", 5)
+            .attr("r", d => d.group + 3)
             .attr('class', d => d.id.replace(/\./g,'') + " " + d.id.replace(/\./g,'') + " dj" + d.group)
             .attr("fill", d => this.color(d.group))
             .call(this.drag(simulation))
@@ -583,6 +584,25 @@ export class DisjointedGraphComponent implements OnInit {
           .attr("cx", d => d.x)
           .attr("cy", d => d.y);
 });
+let displayState: boolean = false;
+const gDisplay = d3.select("figure#Disjointed").append("div")
+        .attr("class", "tooltip gTooltip")
+        .text("Show Groups")
+        .style("top","300px")
+        .style("left","5%")
+        .on("click", (event,d) => {
+          if ( displayState){
+            displayState = !displayState;
+            this.svg.selectAll(`.gGroup`)
+            .attr("opacity", 0)
+          }
+          else {
+            displayState = !displayState;
+            this.svg.selectAll(`.gGroup`)
+            .attr("opacity", 1)
+          }
+
+        })
     let grouparr = nodes.map(d => d.group);
     grouparr = [... new Set(grouparr)]
     let stateArray = Array<boolean>(grouparr.length).fill(false);
@@ -592,6 +612,8 @@ export class DisjointedGraphComponent implements OnInit {
         .attr("font-family", "sans-serif")
         .attr("font-size", 10)
         .attr("text-anchor", "start")
+        .attr("class", "gGroup")
+        .attr("opacity",0)
         .selectAll("g")
         .data(grouparr)
         .join("g")
@@ -618,6 +640,8 @@ export class DisjointedGraphComponent implements OnInit {
                           .classed("gactive",true)
                   }
               });
+              
+
   }
 
   constructor() { }
