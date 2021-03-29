@@ -6,12 +6,25 @@ import { timeParse } from 'd3';
 import { GraphViewComponent } from "../graph-view/graph-view.component";
 import d3tip from 'd3-tip';
 
+interface node {
+  id: string,
+  group: number
+}
+
+interface link{
+  source: string,
+  target: string,
+  value: number
+}
+
 @Component({
   selector: 'app-disjointed-graph',
   templateUrl: './disjointed-graph.component.html',
   styleUrls: ['./disjointed-graph.component.css']
 })
+
 export class DisjointedGraphComponent implements OnInit {
+  
   private nodes = [
     {"id": "Myriel", "group": 1},
     {"id": "Napoleon", "group": 1},
@@ -345,10 +358,10 @@ export class DisjointedGraphComponent implements OnInit {
     {"source": "Mme.Hucheloup", "target": "Enjolras", "value": 1}
   ];
   private svg;
-  private height = 680;
-  private width = 680;
-  private pheight = this.height / 5;
-  private pwidth = this.width / 5;
+  private height: number = 680;
+  private width: number = 680;
+  private pheight: number = this.height / 5;
+  private pwidth: number = this.width / 5;
   private color = d3.scaleOrdinal(this.nodes.map(d => d.group).sort(d3.ascending), d3.schemeCategory10);
   private drag = simulation => {
     function dragstarted(event, d) {
@@ -375,8 +388,8 @@ export class DisjointedGraphComponent implements OnInit {
   }
   private createPreview(id): void{
     // Data Processing to use only Nodes linked to selected Node
-    const linksFilter = this.links.filter((x => x.source === id || x.target === id));
-    var arr = new Array<{id: string, group: number}>();
+    const linksFilter: link[] = this.links.filter((x => x.source === id || x.target === id));
+    var arr = new Array<node>();
     arr.push(this.nodes.find(x => x.id === id));
     for (var values of linksFilter){
       if(values.source === id){
@@ -389,7 +402,7 @@ export class DisjointedGraphComponent implements OnInit {
     const links = linksFilter.map(d => Object.create(d));
     const nodes = arr.map(d => Object.create(d));
     const simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink<any, any>(links).id(d => d.id))
+        .force("link", d3.forceLink<any, link>(links).id(d => d.id))
         .force("charge", d3.forceManyBody())
         .force("x", d3.forceX())
         .force("y", d3.forceY());
@@ -552,11 +565,9 @@ export class DisjointedGraphComponent implements OnInit {
         .selectAll("circle")
         .data(nodes)
         .join("circle")
-            .attr("r", d => d.group + 3)
+            .attr("r", 5)
             .attr('class', d => d.id.replace(/\./g,'') + " " + d.id.replace(/\./g,'') + " dj" + d.group)
-            .attr("stroke", d => this.color(d.group))
-            .attr("stroke-width", d => d.group + 1)
-            .attr("fill", d => this.color(d.group + 1))
+            .attr("fill", d => this.color(d.group))
             .call(this.drag(simulation))
             .on("mouseover", (event, d) => {
                 this.svg.selectAll(`line.${d.id.replace(/\./g,'')}`)
@@ -570,7 +581,7 @@ export class DisjointedGraphComponent implements OnInit {
                       .attr('stroke-opacity', 0.6)
                       .attr('stroke','#999')
                 this.svg.selectAll(`circle.${d.id.replace(/\./g,'')}`)
-                      .attr('stroke','#fff')
+                      .attr('stroke', "#fff")
             })
             .on("click", (event, d) => {
                 div.transition()
@@ -603,25 +614,25 @@ export class DisjointedGraphComponent implements OnInit {
           .attr("cy", d => d.y);
 });
 // Show Groups Button 
-let displayState: boolean = false;
-const gDisplay = d3.select("figure#Disjointed").append("div")
-        .attr("class", "tooltip gTooltip")
-        .text("Show Groups")
-        .style("top","300px")
-        .style("left","5%")
-        .on("click", (event,d) => {
-          if ( displayState){
-            displayState = !displayState;
-            this.svg.selectAll(`.gGroup`)
-            .attr("opacity", 0)
-          }
-          else {
-            displayState = !displayState;
-            this.svg.selectAll(`.gGroup`)
-            .attr("opacity", 1)
-          }
+// let displayState: boolean = false;
+// const gDisplay = d3.select("figure#Disjointed").append("div")
+//         .attr("class", "tooltip gTooltip")
+//         .text("Show Groups")
+//         .style("top","300px")
+//         .style("left","5%")
+//         .on("click", (event,d) => {
+//           if ( displayState){
+//             displayState = !displayState;
+//             this.svg.selectAll(`.gGroup`)
+//             .attr("opacity", 0)
+//           }
+//           else {
+//             displayState = !displayState;
+//             this.svg.selectAll(`.gGroup`)
+//             .attr("opacity", 1)
+//           }
 
-        })
+//         })
 
     // Legend
     let grouparr = nodes.map(d => d.group);
