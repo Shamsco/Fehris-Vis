@@ -616,7 +616,7 @@ export class DisjointedGraphComponent implements OnInit {
       .join('g')
       .attr('class', 'node')
       .call(this.drag(simulation));
-    let testgroups: number[] = [1, 2];
+    let testgroups: number[] = [1, 1];
     let testpie = this.pie(testgroups);
     node
       .append('circle')
@@ -624,11 +624,11 @@ export class DisjointedGraphComponent implements OnInit {
       .attr('class', (d) => d.id.replace(/\./g, '') + ' dj' + d.group)
       .attr('fill', '#12d')
       .each((d, i) => {
-        // node.selectAll(`.node`)
+        // node.selectAll(`.arcs`)
         // .data(testpie)
         // .enter()
         // .append("path")
-        // .attr("fill", d => this.color(d.value))
+        // .attr("fill", d => console.log(i))
         // .attr("d",this.arc)
         node
           .selectAll(`.${d.id.replace(/\./g, '')}`)
