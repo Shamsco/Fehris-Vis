@@ -1,9 +1,12 @@
+import { group } from '@angular/animations';
+import { ValueConverter } from '@angular/compiler/src/render3/view/template';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
+import { PieArcDatum } from 'd3';
 
 interface node extends d3.SimulationNodeDatum {
   id: string;
-  group: number;
+  group: number[];
 }
 
 interface link extends d3.SimulationLinkDatum<node> {
@@ -11,7 +14,10 @@ interface link extends d3.SimulationLinkDatum<node> {
   target: string;
   value: number;
 }
-
+interface pieData {
+  color: string;
+  value: number;
+}
 @Component({
   selector: 'app-disjointed-graph',
   templateUrl: './disjointed-graph.component.html',
@@ -19,83 +25,83 @@ interface link extends d3.SimulationLinkDatum<node> {
 })
 export class DisjointedGraphComponent implements OnInit {
   private nodes = [
-    { id: 'Myriel', group: 1 },
-    { id: 'Napoleon', group: 1 },
-    { id: 'Mlle.Baptistine', group: 1 },
-    { id: 'Mme.Magloire', group: 1 },
-    { id: 'CountessdeLo', group: 1 },
-    { id: 'Geborand', group: 1 },
-    { id: 'Champtercier', group: 1 },
-    { id: 'Cravatte', group: 1 },
-    { id: 'Count', group: 1 },
-    { id: 'OldMan', group: 1 },
-    { id: 'Labarre', group: 2 },
-    { id: 'Valjean', group: 2 },
-    { id: 'Marguerite', group: 3 },
-    { id: 'Mme.deR', group: 2 },
-    { id: 'Isabeau', group: 2 },
-    { id: 'Gervais', group: 2 },
-    { id: 'Tholomyes', group: 3 },
-    { id: 'Listolier', group: 3 },
-    { id: 'Fameuil', group: 3 },
-    { id: 'Blacheville', group: 3 },
-    { id: 'Favourite', group: 3 },
-    { id: 'Dahlia', group: 3 },
-    { id: 'Zephine', group: 3 },
-    { id: 'Fantine', group: 3 },
-    { id: 'Mme.Thenardier', group: 4 },
-    { id: 'Thenardier', group: 4 },
-    { id: 'Cosette', group: 5 },
-    { id: 'Javert', group: 4 },
-    { id: 'Fauchelevent', group: 0 },
-    { id: 'Bamatabois', group: 2 },
-    { id: 'Perpetue', group: 3 },
-    { id: 'Simplice', group: 2 },
-    { id: 'Scaufflaire', group: 2 },
-    { id: 'Woman1', group: 2 },
-    { id: 'Judge', group: 2 },
-    { id: 'Champmathieu', group: 2 },
-    { id: 'Brevet', group: 2 },
-    { id: 'Chenildieu', group: 2 },
-    { id: 'Cochepaille', group: 2 },
-    { id: 'Pontmercy', group: 4 },
-    { id: 'Boulatruelle', group: 6 },
-    { id: 'Eponine', group: 4 },
-    { id: 'Anzelma', group: 4 },
-    { id: 'Woman2', group: 5 },
-    { id: 'MotherInnocent', group: 0 },
-    { id: 'Gribier', group: 0 },
-    { id: 'Jondrette', group: 7 },
-    { id: 'Mme.Burgon', group: 7 },
-    { id: 'Gavroche', group: 8 },
-    { id: 'Gillenormand', group: 5 },
-    { id: 'Magnon', group: 5 },
-    { id: 'Mlle.Gillenormand', group: 5 },
-    { id: 'Mme.Pontmercy', group: 5 },
-    { id: 'Mlle.Vaubois', group: 5 },
-    { id: 'Lt.Gillenormand', group: 5 },
-    { id: 'Marius', group: 8 },
-    { id: 'BaronessT', group: 5 },
-    { id: 'Mabeuf', group: 8 },
-    { id: 'Enjolras', group: 8 },
-    { id: 'Combeferre', group: 8 },
-    { id: 'Prouvaire', group: 8 },
-    { id: 'Feuilly', group: 8 },
-    { id: 'Courfeyrac', group: 8 },
-    { id: 'Bahorel', group: 8 },
-    { id: 'Bossuet', group: 8 },
-    { id: 'Joly', group: 8 },
-    { id: 'Grantaire', group: 8 },
-    { id: 'MotherPlutarch', group: 9 },
-    { id: 'Gueulemer', group: 4 },
-    { id: 'Babet', group: 4 },
-    { id: 'Claquesous', group: 4 },
-    { id: 'Montparnasse', group: 4 },
-    { id: 'Toussaint', group: 5 },
-    { id: 'Child1', group: 10 },
-    { id: 'Child2', group: 10 },
-    { id: 'Brujon', group: 4 },
-    { id: 'Mme.Hucheloup', group: 8 },
+    { id: 'Myriel', group: [1,4,7,8] },
+    { id: 'Napoleon', group: [1,7] },
+    { id: 'Mlle.Baptistine', group: [1,5] },
+    { id: 'Mme.Magloire', group: [1,8,2,6] },
+    { id: 'CountessdeLo', group: [1,8,6] },
+    { id: 'Geborand', group: [1,4,8] },
+    { id: 'Champtercier', group: [1] },
+    { id: 'Cravatte', group: [1] },
+    { id: 'Count', group: [1] },
+    { id: 'OldMan', group: [1] },
+    { id: 'Labarre', group: [2] },
+    { id: 'Valjean', group: [2] },
+    { id: 'Marguerite', group: [3] },
+    { id: 'Mme.deR', group: [2] },
+    { id: 'Isabeau', group: [2] },
+    { id: 'Gervais', group: [2] },
+    { id: 'Tholomyes', group: [3] },
+    { id: 'Listolier', group: [3] },
+    { id: 'Fameuil', group: [3] },
+    { id: 'Blacheville', group: [3] },
+    { id: 'Favourite', group: [3] },
+    { id: 'Dahlia', group: [3] },
+    { id: 'Zephine', group: [3] },
+    { id: 'Fantine', group: [3] },
+    { id: 'Mme.Thenardier', group: [4] },
+    { id: 'Thenardier', group: [4] },
+    { id: 'Cosette', group: [5] },
+    { id: 'Javert', group: [4] },
+    { id: 'Fauchelevent', group: [0] },
+    { id: 'Bamatabois', group: [2] },
+    { id: 'Perpetue', group: [3] },
+    { id: 'Simplice', group: [2] },
+    { id: 'Scaufflaire', group: [2] },
+    { id: 'Woman1', group: [2] },
+    { id: 'Judge', group: [2] },
+    { id: 'Champmathieu', group: [2] },
+    { id: 'Brevet', group: [2] },
+    { id: 'Chenildieu', group: [2] },
+    { id: 'Cochepaille', group: [2] },
+    { id: 'Pontmercy', group: [4] },
+    { id: 'Boulatruelle', group: [6] },
+    { id: 'Eponine', group: [4] },
+    { id: 'Anzelma', group: [4] },
+    { id: 'Woman2', group: [5] },
+    { id: 'MotherInnocent', group: [0] },
+    { id: 'Gribier', group: [0] },
+    { id: 'Jondrette', group: [7] },
+    { id: 'Mme.Burgon', group: [7] },
+    { id: 'Gavroche', group: [8] },
+    { id: 'Gillenormand', group: [5] },
+    { id: 'Magnon', group: [5] },
+    { id: 'Mlle.Gillenormand', group: [5] },
+    { id: 'Mme.Pontmercy', group: [5] },
+    { id: 'Mlle.Vaubois', group: [5] },
+    { id: 'Lt.Gillenormand', group: [5] },
+    { id: 'Marius', group: [8] },
+    { id: 'BaronessT', group: [5] },
+    { id: 'Mabeuf', group: [8] },
+    { id: 'Enjolras', group: [8] },
+    { id: 'Combeferre', group: [8] },
+    { id: 'Prouvaire', group: [8] },
+    { id: 'Feuilly', group: [8] },
+    { id: 'Courfeyrac', group: [8] },
+    { id: 'Bahorel', group: [8] },
+    { id: 'Bossuet', group: [8] },
+    { id: 'Joly', group: [8] },
+    { id: 'Grantaire', group: [8] },
+    { id: 'MotherPlutarch', group: [9] },
+    { id: 'Gueulemer', group: [4] },
+    { id: 'Babet', group: [4] },
+    { id: 'Claquesous', group: [4] },
+    { id: 'Montparnasse', group: [4] },
+    { id: 'Toussaint', group: [5] },
+    { id: 'Child1', group: [10] },
+    { id: 'Child2', group: [10] },
+    { id: 'Brujon', group: [4] },
+    { id: 'Mme.Hucheloup', group: [8] },
   ];
   private links = [
     { source: 'Napoleon', target: 'Myriel', value: 1 },
@@ -353,14 +359,12 @@ export class DisjointedGraphComponent implements OnInit {
   private svg;
   private height: number = 680;
   private width: number = 680;
-  private pheight: number = this.height / 5;
-  private pwidth: number = this.width / 5;
   private color = d3.scaleOrdinal(
-    this.nodes.map((d) => d.group).sort(d3.ascending),
+    this.nodes.map((d) => d.group[0]).sort(d3.ascending),
     d3.schemeCategory10
   );
-  private pie = d3.pie();
-  private arc = d3.arc().innerRadius(5).outerRadius(8);
+  private pie = d3.pie<any>().value(d => d.value);
+  private arc = d3.arc().innerRadius(3).outerRadius(8);
   private drag = (simulation) => {
     function dragstarted(event, d) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -386,6 +390,7 @@ export class DisjointedGraphComponent implements OnInit {
       .on('end', dragended);
   };
   private createPreview(id): void {
+    
     // Data Processing to use only Nodes linked to selected Node
     const linksFilter: link[] = this.links.filter(
       (x) => x.source === id || x.target === id
@@ -411,7 +416,8 @@ export class DisjointedGraphComponent implements OnInit {
       .force('charge', d3.forceManyBody())
       .force('x', d3.forceX())
       .force('y', d3.forceY());
-    //Creating Graph in Tooltip
+    
+      //Creating Graph in Tooltip
     // SVG for Tooltip
     const svg = d3
       .select('div.nodeTooltip')
@@ -428,7 +434,8 @@ export class DisjointedGraphComponent implements OnInit {
       .attr('height', this.height / 2)
       .attr('z', '1')
       .attr('transform', `translate(${this.width / 8},${this.height / 8})`);
-    // Rect for Close button
+    
+      // Rect for Close button
     d3.select('.preview')
       .append('rect')
       .attr('width', 20)
@@ -444,7 +451,8 @@ export class DisjointedGraphComponent implements OnInit {
         d3.select('div.nodeTooltip').style('opacity', 0);
         d3.selectAll('.preview').remove();
       });
-    //Tool tip links
+    
+      //Tool tip links
     const link = svg
       .append('g')
       .attr('stroke', '#999')
@@ -464,7 +472,9 @@ export class DisjointedGraphComponent implements OnInit {
           d.source.group
       )
       .attr('z', '1');
-    // Tool tip Nodes
+    
+    
+      // Tool tip Nodes
     const node = svg
       .append('g')
       .attr('stroke', '#fff')
@@ -505,7 +515,9 @@ export class DisjointedGraphComponent implements OnInit {
           .attr('stroke', '#fff');
       });
     node.append('title').text((d) => d.id);
-    // Position update for graph
+    
+    
+    // Position update for tooltip graph
     simulation.on('tick', () => {
       link
         .attr('x1', (d) => d.source.x)
@@ -521,6 +533,8 @@ export class DisjointedGraphComponent implements OnInit {
 
   // Creates the Force-Directed Graph
   private createGraph(): void {
+    let linksData = this.links.slice(0,5)
+    let nodesData = this.nodes.slice(0,8)
     const links = this.links.map((d) => Object.create(d));
     const nodes = this.nodes.map((d) => Object.create(d));
     const simulation = d3
@@ -614,22 +628,29 @@ export class DisjointedGraphComponent implements OnInit {
       .selectAll('.node')
       .data(nodes)
       .join('g')
-      .attr('class', 'node')
+      .attr('class', (d) => 'node ' + d.id.replace(/\./g, '') + ' dj' + d.group.join(" dj") )
       .call(this.drag(simulation));
-    let testgroups: number[] = [1, 1];
-    let testpie = this.pie(testgroups);
-    node
+    
+    //MultiCategory
+      node
       .append('circle')
       .attr('r', 5)
-      .attr('class', (d) => d.id.replace(/\./g, '') + ' dj' + d.group)
+      .attr('class', (d) => d.id.replace(/\./g, '') + ' dj' + d.group.join(" dj"))
       .attr('fill', '#12d')
       .each((d, i) => {
-        // node.selectAll(`.arcs`)
-        // .data(testpie)
-        // .enter()
-        // .append("path")
-        // .attr("fill", d => console.log(i))
-        // .attr("d",this.arc)
+        let pieData: pieData[] = [];
+        d.group.forEach(element => {
+          pieData.push({color: this.color(element), value: (1/d.group.length)})
+        });
+        let arcData = this.pie(pieData)
+        let index: number = i;
+        let selectedNode = node.filter((d , i ) => {return i === index})
+        selectedNode.selectAll()
+        .data(arcData)
+        .enter()
+        .append("path")
+        .attr("fill", d => d.data.color)
+        .attr("d",this.arc)
         node
           .selectAll(`.${d.id.replace(/\./g, '')}`)
           .on('mouseover', (event, d) => {
@@ -701,55 +722,56 @@ export class DisjointedGraphComponent implements OnInit {
     //         })
 
     // Legend
-    let grouparr: number[] = nodes.map((d) => d.group);
-    grouparr = [...new Set(grouparr)];
-    let stateArray: boolean[] = Array<boolean>(grouparr.length).fill(false);
-    const legend = this.svg
-      .append('g')
-      .attr('fill', 'none')
-      .attr('pointer-events', 'all')
-      .attr('font-family', 'sans-serif')
-      .attr('font-size', 10)
-      .attr('text-anchor', 'start')
-      .attr('class', 'gGroup')
-      .attr('opacity', 1)
-      .selectAll('g')
-      .data(grouparr)
-      .join('g')
-      .attr(
-        'transform',
-        (d) =>
-          `translate(${-this.width / 2 + 10},${-this.height / 4 + d * 10 + 5})`
-      )
-      .call((g) =>
-        g
-          .append('text')
-          .attr('x', 6)
-          .attr('dy', '0.35em')
-          .attr('class', (d) => 'dj' + d)
-          .attr('fill', (d) => d3.lab(this.color(d)))
-          .text((d) => 'Group ' + d)
-      )
-      .call((g) =>
-        g
-          .append('circle')
-          .attr('r', 3)
-          .attr('class', (d) => 'dj' + d)
-          .attr('fill', (d) => this.color(d))
-      )
-      .on('click', (event, d) => {
-        if (stateArray[d] === true) {
-          stateArray[d] = false;
-          this.svg.selectAll(`.dj${d}`).classed('gactive', false);
-          node.selectAll(`circle.dj${d}`).classed('classic', true);
-        } else if (stateArray[d] === false) {
-          stateArray[d] = true;
-          this.svg.selectAll(`.dj${d}`).classed('gactive', true);
-          node.selectAll(`circle.dj${d}`).attr('fill', this.color(d));
-          node.selectAll(`circle.dj${d}`).classed('classic', false);
-        }
-      });
-  }
+    // let grouparr: number[] = nodes.map((d) => d.group);
+    // console.log(grouparr)
+    // grouparr = [...new Set(grouparr)];
+    // let stateArray: boolean[] = Array<boolean>(grouparr.length).fill(false);
+  //   const legend = this.svg
+  //     .append('g')
+  //     .attr('fill', 'none')
+  //     .attr('pointer-events', 'all')
+  //     .attr('font-family', 'sans-serif')
+  //     .attr('font-size', 10)
+  //     .attr('text-anchor', 'start')
+  //     .attr('class', 'gGroup')
+  //     .attr('opacity', 1)
+  //     .selectAll('g')
+  //     .data(grouparr)
+  //     .join('g')
+  //     .attr(
+  //       'transform',
+  //       (d) =>
+  //         `translate(${-this.width / 2 + 10},${-this.height / 4 + d * 10 + 5})`
+  //     )
+  //     .call((g) =>
+  //       g
+  //         .append('text')
+  //         .attr('x', 6)
+  //         .attr('dy', '0.35em')
+  //         .attr('class', (d) => 'dj' + d)
+  //         .attr('fill', (d) => d3.lab(this.color(d)))
+  //         .text((d) => 'Group ' + d)
+  //     )
+  //     .call((g) =>
+  //       g
+  //         .append('circle')
+  //         .attr('r', 3)
+  //         .attr('class', (d) => 'dj' + d)
+  //         .attr('fill', (d) => this.color(d))
+  //     )
+  //     .on('click', (event, d) => {
+  //       if (stateArray[d] === true) {
+  //         stateArray[d] = false;
+  //         this.svg.selectAll(`.dj${d}`).classed('gactive', false);
+  //         node.selectAll(`circle.dj${d}`).classed('classic', true);
+  //       } else if (stateArray[d] === false) {
+  //         stateArray[d] = true;
+  //         this.svg.selectAll(`.dj${d}`).classed('gactive', true);
+  //         node.selectAll(`circle.dj${d}`).attr('fill', this.color(d));
+  //         node.selectAll(`circle.dj${d}`).classed('classic', false);
+  //       }
+  //     });
+   }
 
   constructor() {}
 
