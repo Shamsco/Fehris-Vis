@@ -1,11 +1,17 @@
-import {
-  BoundElementProperty,
-  devOnlyGuardedExpression,
-} from '@angular/compiler';
 import { Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
-import { nice, timeout } from 'd3';
-import { DataServiceService } from '../data-service.service';
+
+interface node extends d3.SimulationNodeDatum {
+  id: string;
+  group: number[];
+}
+
+interface link extends d3.SimulationLinkDatum<node> {
+  source: string;
+  target: string;
+  value: number;
+}
+
 @Component({
   selector: 'app-arc',
   templateUrl: './arc.component.html',
@@ -13,83 +19,83 @@ import { DataServiceService } from '../data-service.service';
 })
 export class ArcComponent implements OnInit {
   private nodes = [
-    { id: 'Myriel', group: 1 },
-    { id: 'Napoleon', group: 1 },
-    { id: 'Mlle.Baptistine', group: 1 },
-    { id: 'Mme.Magloire', group: 1 },
-    { id: 'CountessdeLo', group: 1 },
-    { id: 'Geborand', group: 1 },
-    { id: 'Champtercier', group: 1 },
-    { id: 'Cravatte', group: 1 },
-    { id: 'Count', group: 1 },
-    { id: 'OldMan', group: 1 },
-    { id: 'Labarre', group: 2 },
-    { id: 'Valjean', group: 2 },
-    { id: 'Marguerite', group: 3 },
-    { id: 'Mme.deR', group: 2 },
-    { id: 'Isabeau', group: 2 },
-    { id: 'Gervais', group: 2 },
-    { id: 'Tholomyes', group: 3 },
-    { id: 'Listolier', group: 3 },
-    { id: 'Fameuil', group: 3 },
-    { id: 'Blacheville', group: 3 },
-    { id: 'Favourite', group: 3 },
-    { id: 'Dahlia', group: 3 },
-    { id: 'Zephine', group: 3 },
-    { id: 'Fantine', group: 3 },
-    { id: 'Mme.Thenardier', group: 4 },
-    { id: 'Thenardier', group: 4 },
-    { id: 'Cosette', group: 5 },
-    { id: 'Javert', group: 4 },
-    { id: 'Fauchelevent', group: 0 },
-    { id: 'Bamatabois', group: 2 },
-    { id: 'Perpetue', group: 3 },
-    { id: 'Simplice', group: 2 },
-    { id: 'Scaufflaire', group: 2 },
-    { id: 'Woman1', group: 2 },
-    { id: 'Judge', group: 2 },
-    { id: 'Champmathieu', group: 2 },
-    { id: 'Brevet', group: 2 },
-    { id: 'Chenildieu', group: 2 },
-    { id: 'Cochepaille', group: 2 },
-    { id: 'Pontmercy', group: 4 },
-    { id: 'Boulatruelle', group: 6 },
-    { id: 'Eponine', group: 4 },
-    { id: 'Anzelma', group: 4 },
-    { id: 'Woman2', group: 5 },
-    { id: 'MotherInnocent', group: 0 },
-    { id: 'Gribier', group: 0 },
-    { id: 'Jondrette', group: 7 },
-    { id: 'Mme.Burgon', group: 7 },
-    { id: 'Gavroche', group: 8 },
-    { id: 'Gillenormand', group: 5 },
-    { id: 'Magnon', group: 5 },
-    { id: 'Mlle.Gillenormand', group: 5 },
-    { id: 'Mme.Pontmercy', group: 5 },
-    { id: 'Mlle.Vaubois', group: 5 },
-    { id: 'Lt.Gillenormand', group: 5 },
-    { id: 'Marius', group: 8 },
-    { id: 'BaronessT', group: 5 },
-    { id: 'Mabeuf', group: 8 },
-    { id: 'Enjolras', group: 8 },
-    { id: 'Combeferre', group: 8 },
-    { id: 'Prouvaire', group: 8 },
-    { id: 'Feuilly', group: 8 },
-    { id: 'Courfeyrac', group: 8 },
-    { id: 'Bahorel', group: 8 },
-    { id: 'Bossuet', group: 8 },
-    { id: 'Joly', group: 8 },
-    { id: 'Grantaire', group: 8 },
-    { id: 'MotherPlutarch', group: 9 },
-    { id: 'Gueulemer', group: 4 },
-    { id: 'Babet', group: 4 },
-    { id: 'Claquesous', group: 4 },
-    { id: 'Montparnasse', group: 4 },
-    { id: 'Toussaint', group: 5 },
-    { id: 'Child1', group: 10 },
-    { id: 'Child2', group: 10 },
-    { id: 'Brujon', group: 4 },
-    { id: 'Mme.Hucheloup', group: 8 },
+    { id: 'Myriel', group: [1, 4, 7, 8] },
+    { id: 'Napoleon', group: [1, 7] },
+    { id: 'Mlle.Baptistine', group: [1, 5] },
+    { id: 'Mme.Magloire', group: [1, 8, 2, 6] },
+    { id: 'CountessdeLo', group: [1, 8, 6] },
+    { id: 'Geborand', group: [1, 4, 8] },
+    { id: 'Champtercier', group: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+    { id: 'Cravatte', group: [1] },
+    { id: 'Count', group: [1] },
+    { id: 'OldMan', group: [1] },
+    { id: 'Labarre', group: [2] },
+    { id: 'Valjean', group: [2] },
+    { id: 'Marguerite', group: [3] },
+    { id: 'Mme.deR', group: [2] },
+    { id: 'Isabeau', group: [2] },
+    { id: 'Gervais', group: [2] },
+    { id: 'Tholomyes', group: [3] },
+    { id: 'Listolier', group: [3] },
+    { id: 'Fameuil', group: [3] },
+    { id: 'Blacheville', group: [3] },
+    { id: 'Favourite', group: [3] },
+    { id: 'Dahlia', group: [3] },
+    { id: 'Zephine', group: [3] },
+    { id: 'Fantine', group: [3] },
+    { id: 'Mme.Thenardier', group: [4] },
+    { id: 'Thenardier', group: [4] },
+    { id: 'Cosette', group: [5] },
+    { id: 'Javert', group: [4] },
+    { id: 'Fauchelevent', group: [0] },
+    { id: 'Bamatabois', group: [2] },
+    { id: 'Perpetue', group: [3] },
+    { id: 'Simplice', group: [2] },
+    { id: 'Scaufflaire', group: [2] },
+    { id: 'Woman1', group: [2] },
+    { id: 'Judge', group: [2] },
+    { id: 'Champmathieu', group: [2] },
+    { id: 'Brevet', group: [2] },
+    { id: 'Chenildieu', group: [2] },
+    { id: 'Cochepaille', group: [2] },
+    { id: 'Pontmercy', group: [4] },
+    { id: 'Boulatruelle', group: [6] },
+    { id: 'Eponine', group: [4] },
+    { id: 'Anzelma', group: [4] },
+    { id: 'Woman2', group: [5] },
+    { id: 'MotherInnocent', group: [0] },
+    { id: 'Gribier', group: [0] },
+    { id: 'Jondrette', group: [7] },
+    { id: 'Mme.Burgon', group: [7] },
+    { id: 'Gavroche', group: [8] },
+    { id: 'Gillenormand', group: [5] },
+    { id: 'Magnon', group: [5] },
+    { id: 'Mlle.Gillenormand', group: [5] },
+    { id: 'Mme.Pontmercy', group: [5] },
+    { id: 'Mlle.Vaubois', group: [5] },
+    { id: 'Lt.Gillenormand', group: [5] },
+    { id: 'Marius', group: [8] },
+    { id: 'BaronessT', group: [5] },
+    { id: 'Mabeuf', group: [8] },
+    { id: 'Enjolras', group: [8] },
+    { id: 'Combeferre', group: [8] },
+    { id: 'Prouvaire', group: [8] },
+    { id: 'Feuilly', group: [8] },
+    { id: 'Courfeyrac', group: [8] },
+    { id: 'Bahorel', group: [8] },
+    { id: 'Bossuet', group: [8] },
+    { id: 'Joly', group: [8] },
+    { id: 'Grantaire', group: [8] },
+    { id: 'MotherPlutarch', group: [9] },
+    { id: 'Gueulemer', group: [4] },
+    { id: 'Babet', group: [4] },
+    { id: 'Claquesous', group: [4] },
+    { id: 'Montparnasse', group: [4] },
+    { id: 'Toussaint', group: [5] },
+    { id: 'Child1', group: [10] },
+    { id: 'Child2', group: [10] },
+    { id: 'Brujon', group: [4] },
+    { id: 'Mme.Hucheloup', group: [8] },
   ];
   private links = [
     { source: 'Napoleon', target: 'Myriel', value: 1 },
@@ -349,28 +355,29 @@ export class ArcComponent implements OnInit {
   ];
 
   public margin = { top: 20, right: 40, bottom: 20, left: 100 };
-  private step = 14;
-  private height =
+  private step: number = 14;
+  private height: number =
     (this.nodes.length - 1) * this.step + this.margin.top + this.margin.bottom;
-  private width =
+  private width:number =
     (this.nodes.length - 1) * this.step + this.margin.right + this.margin.left;
   private svg;
-
-  private arc(d: any) {
+  private noMatchColour = '#aaa';
+  private arc(d: any, margin: number) {
     const y1 = d.source.y;
     const y2 = d.target.y;
     const r = Math.abs(y2 - y1) / 2;
-    return `M${200},${y1}A${r},${r} 0,0,${y1 < y2 ? 1 : 0} ${200},${y2}`;
+    return `M${margin},${y1}A${r},${r} 0,0,${y1 < y2 ? 1 : 0} ${margin},${y2}`;
   }
 
-  private createSvg(): void {
+  private createSvg(width: number, height: number, margin: any): void {
     this.svg = d3
-      .select('figure#ARC')
+      .select('div#ARC')
       .append('svg')
-      .attr('width', this.width - this.margin.left * 3)
-      .attr('height', this.height + this.margin.left)
-      .attr('transform', `translate(${-this.margin.left})`);
+      .attr('width', width - margin.left * 3)
+      .attr('height', height + margin.left)
+      .attr('transform', `translate(${-margin.left})`);
   }
+
   private drawArc(nodes: any, links: any): void {
     const color = d3.scaleOrdinal(
       nodes.map((d) => d.group).sort(d3.ascending),
@@ -384,63 +391,97 @@ export class ArcComponent implements OnInit {
       links.map((d) => d.value).sort(d3.ascending),
       [1.5, 7.0]
     );
-    const noMatchColour = '#aaa';
-    const label = this.svg
+    
+    const label = this.createGraphLabels(nodes, y, color);
+
+    const path = this.createGraphPath(links, color, linkWidth);
+
+    const overlay = this.createGraphOverlay(nodes, y, color);
+
+    //Data Pre-processing for Legend
+    let groups: number[][] = nodes.map((d) => d.group);
+    let legendGroups: number[] = new Array<number>();
+    groups.forEach(d => {
+      d.forEach( value => {
+        legendGroups.push(value)
+      })
+    })
+    
+    legendGroups = [... new Set(legendGroups)]
+    let stateArray: boolean[] = Array<boolean>(legendGroups.length).fill(false);
+    const legend = this.createGraphLegend(legendGroups, color, stateArray);
+  }
+
+  constructor() {}
+
+  private createGraphLegend(grouparr: number[], color: d3.ScaleOrdinal<{ toString(): string; }, string, never>, stateArray: boolean[]) {
+    return this.svg
       .append('g')
+      .attr('fill', 'none')
+      .attr('pointer-events', 'all')
       .attr('font-family', 'sans-serif')
       .attr('font-size', 10)
-      .attr('text-anchor', 'end')
+      .attr('text-anchor', 'start')
       .selectAll('g')
-      .data(nodes)
+      .data(grouparr)
       .join('g')
       .attr(
         'transform',
-        (d) => `translate(${this.margin.left * 2},${(d.y = y(d.id))})`
+        (d) => `translate(${this.width - this.width / 2},${d * 10 + 5})`
       )
-      .call((g) =>
-        g
-          .append('text')
-          .attr('x', -6)
-          .attr('dy', '0.35em')
-          .attr('class', (d) => d.id.replace(/\./g, ' ') + ' p' + d.group)
-          .attr('fill', (d) => d3.lab(color(d.group)))
-          .text((d) => d.id)
+      .call((g) => g
+        .append('text')
+        .attr('x', 6)
+        .attr('dy', '0.35em')
+        .attr('class', (d) => 'p' + d)
+        .attr('fill', (d) => d3.lab(color(d)))
+        .text((d) => 'Group ' + d)
       )
-      .call((g) =>
-        g
-          .append('circle')
-          .attr('r', 3)
-          .attr('class', (d) => d.id.replace(/\./g, ' ') + ' p' + d.group)
-          .attr('fill', (d) => color(d.group))
-      );
+      .call((g) => g
+        .append('circle')
+        .attr('r', 3)
+        .attr('class', (d) => 'p' + d)
+        .attr('fill', (d) => color(d))
+      )
+      .on('click', (event, d) => {
+        d3.selectAll('path').attr('visibility', 'visible');
+        if (stateArray[d] === true) {
+          stateArray[d] = false;
+          this.svg
+            .selectAll(`path.p${d}`)
+            .attr('stroke-opacity', 0.6)
+            .attr('stroke', (d) => d.source.group === d.target.group ? color(d.source.group) : '#aaa'
+            );
+          this.svg
+            .selectAll(`circle.p${d}`)
+            .attr('stroke-width', '0')
+            .attr('stroke', color(d));
+          this.svg
+            .selectAll(`text.p${d}`)
+            .attr('fill', d3.lab(color(d)))
+            .attr('font-weight', 'none')
+            .attr('font-size', 10);
+        } else if (stateArray[d] === false) {
+          d3.selectAll(`path:not(.p${d})`).attr('visibility', 'hidden');
+          stateArray[d] = true;
+          this.svg
+            .selectAll(`path.p${d}`)
+            .attr('stroke-opacity', 1)
+            .attr('stroke', d3.lab(color(d)).darker(1));
+          this.svg
+            .selectAll(`circle.p${d}`)
+            .attr('stroke-width', '1')
+            .attr('stroke', 'black');
+          this.svg
+            .selectAll(`text.p${d}`)
+            .attr('font-weight', 'bold')
+            .attr('font-size', 15);
+        }
+      });
+  }
 
-    const path = this.svg
-      .insert('g', '*')
-      .attr('fill', 'none')
-      .attr('stroke-opacity', 0.6)
-      .attr('stroke-width', 1.5)
-      .selectAll('path')
-      .data(links)
-      .join('path')
-      .attr('stroke', (d) =>
-        d.source.group === d.target.group
-          ? color(d.source.group)
-          : noMatchColour
-      )
-      .attr('stroke-width', (d) => linkWidth(d.source.group))
-      .attr('stroke-opacity', 0.6)
-      .attr('d', this.arc)
-      .attr(
-        'class',
-        (d) =>
-          d.source.id.replace(/\./g, ' ') +
-          ' ' +
-          d.target.id.replace(/\./g, ' ') +
-          ' p' +
-          d.source.group
-      );
-
-    const overlay = this.svg
+  private createGraphOverlay(nodes: any, y: d3.ScalePoint<{ toString(): string; }>, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>) {
+    return this.svg
       .append('g')
       .attr('fill', 'none')
       .attr('pointer-events', 'all')
@@ -457,10 +498,9 @@ export class ArcComponent implements OnInit {
         this.svg
           .selectAll(`path.${d.id}`)
           .attr('stroke-opacity', 1)
-          .attr('stroke', (d) =>
-            d.source.group === d.target.group
-              ? color(d.source.group)
-              : noMatchColour
+          .attr('stroke', (d) => d.source.group === d.target.group
+            ? color(d.source.group)
+            : this.noMatchColour
           );
         this.svg
           .selectAll(`circle.${d.id}`)
@@ -497,8 +537,7 @@ export class ArcComponent implements OnInit {
         this.svg
           .selectAll(`path.${d.id}`)
           .attr('stroke-opacity', 0.6)
-          .attr('stroke', (d) =>
-            d.source.group === d.target.group ? color(d.source.group) : '#aaa'
+          .attr('stroke', (d) => d.source.group === d.target.group ? color(d.source.group) : '#aaa'
           );
         this.svg
           .selectAll(`circle.${d.id}`)
@@ -532,79 +571,62 @@ export class ArcComponent implements OnInit {
           .attr('font-weight', 'none')
           .attr('font-size', 10);
       });
+  }
 
-    let grouparr = nodes.map((d) => d.group);
-    grouparr = [...new Set(grouparr)];
-    let stateArray = Array<boolean>(grouparr.length).fill(false);
-    const legend = this.svg
-      .append('g')
+  private createGraphPath(links: any, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>, linkWidth: d3.ScalePoint<{ toString(): string; }>) {
+    return this.svg
+      .insert('g', '*')
       .attr('fill', 'none')
-      .attr('pointer-events', 'all')
+      .attr('stroke-opacity', 0.6)
+      .attr('stroke-width', 1.5)
+      .selectAll('path')
+      .data(links)
+      .join('path')
+      .attr('stroke', (d) => d.source.group === d.target.group
+        ? color(d.source.group)
+        : this.noMatchColour
+      )
+      .attr('stroke-width', (d) => linkWidth(d.source.group))
+      .attr('stroke-opacity', 0.6)
+      .attr('d', d => this.arc(d, this.margin.left * 2))
+      .attr(
+        'class',
+        (d) => d.source.id.replace(/\./g, ' ') +
+          ' ' +
+          d.target.id.replace(/\./g, ' ') +
+          ' p' +
+          d.source.group
+      );
+  }
+
+  private createGraphLabels(nodes: any, y: d3.ScalePoint<{ toString(): string; }>, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>) {
+    return this.svg
+      .append('g')
       .attr('font-family', 'sans-serif')
       .attr('font-size', 10)
-      .attr('text-anchor', 'start')
+      .attr('text-anchor', 'end')
       .selectAll('g')
-      .data(grouparr)
+      .data(nodes)
       .join('g')
       .attr(
         'transform',
-        (d) => `translate(${this.width - this.width / 2},${d * 10 + 5})`
+        (d) => `translate(${this.margin.left * 2},${(d.y = y(d.id))})`
       )
-      .call((g) =>
-        g
-          .append('text')
-          .attr('x', 6)
-          .attr('dy', '0.35em')
-          .attr('class', (d) => 'p' + d)
-          .attr('fill', (d) => d3.lab(color(d)))
-          .text((d) => 'Group ' + d)
+      .call((g) => g
+        .append('text')
+        .attr('x', -6)
+        .attr('dy', '0.35em')
+        .attr('class', (d) => d.id.replace(/\./g, ' ') + ' p' + d.group)
+        .attr('fill', (d) => d3.lab(color(d.group)))
+        .text((d) => d.id)
       )
-      .call((g) =>
-        g
-          .append('circle')
-          .attr('r', 3)
-          .attr('class', (d) => 'p' + d)
-          .attr('fill', (d) => color(d))
-      )
-      .on('click', (event, d) => {
-        d3.selectAll('path').attr('visibility', 'visible');
-        if (stateArray[d] === true) {
-          stateArray[d] = false;
-          this.svg
-            .selectAll(`path.p${d}`)
-            .attr('stroke-opacity', 0.6)
-            .attr('stroke', (d) =>
-              d.source.group === d.target.group ? color(d.source.group) : '#aaa'
-            );
-          this.svg
-            .selectAll(`circle.p${d}`)
-            .attr('stroke-width', '0')
-            .attr('stroke', color(d));
-          this.svg
-            .selectAll(`text.p${d}`)
-            .attr('fill', d3.lab(color(d)))
-            .attr('font-weight', 'none')
-            .attr('font-size', 10);
-        } else if (stateArray[d] === false) {
-          d3.selectAll(`path:not(.p${d})`).attr('visibility', 'hidden');
-          stateArray[d] = true;
-          this.svg
-            .selectAll(`path.p${d}`)
-            .attr('stroke-opacity', 1)
-            .attr('stroke', d3.lab(color(d)).darker(1));
-          this.svg
-            .selectAll(`circle.p${d}`)
-            .attr('stroke-width', '1')
-            .attr('stroke', 'black');
-          this.svg
-            .selectAll(`text.p${d}`)
-            .attr('font-weight', 'bold')
-            .attr('font-size', 15);
-        }
-      });
+      .call((g) => g
+        .append('circle')
+        .attr('r', 3)
+        .attr('class', (d) => d.id.replace(/\./g, ' ') + ' p' + d.group)
+        .attr('fill', (d) => color(d.group))
+      );
   }
-
-  constructor() {}
 
   ngOnInit(): void {
     const nodes = this.nodes.map(({ id, group }) => ({
@@ -626,12 +648,7 @@ export class ArcComponent implements OnInit {
       source.sourceLinks.push(link);
       target.targetLinks.push(link);
     }
-    this.createSvg();
-    this.drawArc(
-      nodes.sort((x, y) => {
-        return d3.ascending(x.group, y.group);
-      }),
-      links
-    );
+    this.createSvg(this.width, this.height, this.margin);
+    this.drawArc(nodes,links);
   }
 }
