@@ -557,7 +557,7 @@ export class DisjointedGraphComponent implements OnInit {
     legendGroups = [... new Set(legendGroups)]
     let stateArray: boolean[] = Array<boolean>(legendGroups.length).fill(false);
     const legend = this.createGroupLegend(svg, legendGroups, stateArray, node, 'm');
-    d3.selectAll(".arcs").attr("visibility","hidden")
+    d3.selectAll(".marcs").attr("visibility","hidden")
     d3.selectAll(".gGroup").attr("visibility","hidden")
   }
 
@@ -610,7 +610,7 @@ export class DisjointedGraphComponent implements OnInit {
   }
   //Toggles Group view
   showGroups() {
-    d3.selectAll(".arcs").attr("visibility", this.checked? "hidden":"visible")
+    d3.selectAll(".marcs").attr("visibility", this.checked? "hidden":"visible")
     d3.selectAll(".gGroup").attr("visibility", this.checked? "hidden":"visible")
   }
 
@@ -790,7 +790,7 @@ export class DisjointedGraphComponent implements OnInit {
           .append('path')
           .attr('fill', (d) => d.data.color)
           .attr('d', this.arc)
-          .attr("class", "arcs");
+          .attr("class", `${classSuffix}arcs`);
       });
     node.append('title').text((d) => d.id);
   }

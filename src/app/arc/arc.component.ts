@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
+import { utcThursdays } from 'd3';
 
 interface node extends d3.SimulationNodeDatum {
   id: string;
@@ -12,6 +13,10 @@ interface link extends d3.SimulationLinkDatum<node> {
   value: number;
 }
 
+interface pieData {
+  color: string;
+  value: number;
+}
 @Component({
   selector: 'app-arc',
   templateUrl: './arc.component.html',
@@ -356,15 +361,17 @@ export class ArcComponent implements OnInit {
 
   public margin = { top: 20, right: 40, bottom: 20, left: 100 };
   private step: number = 14;
+  private pie = d3.pie<any>().value((d) => d.value);
   private height: number =
     (this.nodes.length - 1) * this.step + this.margin.top + this.margin.bottom;
   private width:number =
     (this.nodes.length - 1) * this.step + this.margin.right + this.margin.left;
   private svg;
   private noMatchColour = '#aaa';
+  private groupArc = d3.arc().innerRadius(4).outerRadius(7);
   private arc(d: any, margin: number) {
     const y1 = d.source.y;
-    const y2 = d.target.y;
+    const y2 = d.target.y ;
     const r = Math.abs(y2 - y1) / 2;
     return `M${margin},${y1}A${r},${r} 0,0,${y1 < y2 ? 1 : 0} ${margin},${y2}`;
   }
@@ -373,14 +380,15 @@ export class ArcComponent implements OnInit {
     this.svg = d3
       .select('div#ARC')
       .append('svg')
-      .attr('width', width - margin.left * 3)
-      .attr('height', height + margin.left)
+      // .attr('width', width - margin.left * 3)
+      // .attr('height', height + margin.left)
+      .attr('viewBox', `0, 0, ${width}, ${height}`)
       .attr('transform', `translate(${-margin.left})`);
   }
 
   private drawArc(nodes: any, links: any): void {
     const color = d3.scaleOrdinal(
-      nodes.map((d) => d.group).sort(d3.ascending),
+      nodes.map((d) => d.group[0]).sort(d3.ascending),
       d3.schemeCategory10
     );
     const y = d3.scalePoint(nodes.map((d) => d.id).sort(d3.ascending), [
@@ -392,11 +400,13 @@ export class ArcComponent implements OnInit {
       [1.5, 7.0]
     );
     
-    const label = this.createGraphLabels(nodes, y, color);
+    const label = this.createGraphLabels(nodes,"p", y, color);
 
-    const path = this.createGraphPath(links, color, linkWidth);
+    const path = this.createGraphPath(links, "p",color, linkWidth);
 
-    const overlay = this.createGraphOverlay(nodes, y, color);
+    const overlay = this.createGraphOverlay(nodes, "p",y, color);
+    
+    this.createNodeArcs(label,"p",color);
 
     //Data Pre-processing for Legend
     let groups: number[][] = nodes.map((d) => d.group);
@@ -409,12 +419,16 @@ export class ArcComponent implements OnInit {
     
     legendGroups = [... new Set(legendGroups)]
     let stateArray: boolean[] = Array<boolean>(legendGroups.length).fill(false);
-    const legend = this.createGraphLegend(legendGroups, color, stateArray);
+    const legend = this.createGraphLegend(legendGroups, "p",color, stateArray);
+
+
+
+    this.update(nodes, y, label,path, overlay)
   }
 
   constructor() {}
 
-  private createGraphLegend(grouparr: number[], color: d3.ScaleOrdinal<{ toString(): string; }, string, never>, stateArray: boolean[]) {
+  private createGraphLegend(grouparr: number[], classSuffix: string, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>, stateArray: boolean[]) {
     return this.svg
       .append('g')
       .attr('fill', 'none')
@@ -433,54 +447,54 @@ export class ArcComponent implements OnInit {
         .append('text')
         .attr('x', 6)
         .attr('dy', '0.35em')
-        .attr('class', (d) => 'p' + d)
+        .attr('class', (d) => classSuffix + d)
         .attr('fill', (d) => d3.lab(color(d)))
         .text((d) => 'Group ' + d)
       )
       .call((g) => g
         .append('circle')
         .attr('r', 3)
-        .attr('class', (d) => 'p' + d)
+        .attr('class', (d) => classSuffix + d)
         .attr('fill', (d) => color(d))
       )
       .on('click', (event, d) => {
-        d3.selectAll('path').attr('visibility', 'visible');
+        this.svg.selectAll('path').attr('visibility', 'visible');
         if (stateArray[d] === true) {
           stateArray[d] = false;
           this.svg
-            .selectAll(`path.p${d}`)
+            .selectAll(`path.${classSuffix+d}`)
             .attr('stroke-opacity', 0.6)
             .attr('stroke', (d) => d.source.group === d.target.group ? color(d.source.group) : '#aaa'
             );
           this.svg
-            .selectAll(`circle.p${d}`)
+            .selectAll(`circle.${classSuffix+d}`)
             .attr('stroke-width', '0')
             .attr('stroke', color(d));
           this.svg
-            .selectAll(`text.p${d}`)
+            .selectAll(`text.${classSuffix+d}`)
             .attr('fill', d3.lab(color(d)))
             .attr('font-weight', 'none')
             .attr('font-size', 10);
         } else if (stateArray[d] === false) {
-          d3.selectAll(`path:not(.p${d})`).attr('visibility', 'hidden');
+          d3.selectAll(`path:not(.${classSuffix+d})`).attr('visibility', 'hidden');
           stateArray[d] = true;
           this.svg
-            .selectAll(`path.p${d}`)
+            .selectAll(`path.${classSuffix+d}`)
             .attr('stroke-opacity', 1)
             .attr('stroke', d3.lab(color(d)).darker(1));
           this.svg
-            .selectAll(`circle.p${d}`)
+            .selectAll(`circle.${classSuffix+d}`)
             .attr('stroke-width', '1')
             .attr('stroke', 'black');
           this.svg
-            .selectAll(`text.p${d}`)
+            .selectAll(`text.${classSuffix+d}`)
             .attr('font-weight', 'bold')
             .attr('font-size', 15);
         }
       });
   }
 
-  private createGraphOverlay(nodes: any, y: d3.ScalePoint<{ toString(): string; }>, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>) {
+  private createGraphOverlay(nodes: any, classSuffix: string, y: d3.ScalePoint<{ toString(): string; }>, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>) {
     return this.svg
       .append('g')
       .attr('fill', 'none')
@@ -498,10 +512,9 @@ export class ArcComponent implements OnInit {
         this.svg
           .selectAll(`path.${d.id}`)
           .attr('stroke-opacity', 1)
-          .attr('stroke', (d) => d.source.group === d.target.group
-            ? color(d.source.group)
-            : this.noMatchColour
-          );
+          .attr('stroke', "black"
+          )
+          .attr("z", 1);
         this.svg
           .selectAll(`circle.${d.id}`)
           .attr('stroke-width', '1')
@@ -537,8 +550,9 @@ export class ArcComponent implements OnInit {
         this.svg
           .selectAll(`path.${d.id}`)
           .attr('stroke-opacity', 0.6)
-          .attr('stroke', (d) => d.source.group === d.target.group ? color(d.source.group) : '#aaa'
-          );
+          .attr('stroke', '#aaa'
+          )
+          .attr("z", 0);
         this.svg
           .selectAll(`circle.${d.id}`)
           .attr('stroke-width', '0')
@@ -573,7 +587,7 @@ export class ArcComponent implements OnInit {
       });
   }
 
-  private createGraphPath(links: any, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>, linkWidth: d3.ScalePoint<{ toString(): string; }>) {
+  private createGraphPath(links: any, classSuffix:string, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>, linkWidth: d3.ScalePoint<{ toString(): string; }>) {
     return this.svg
       .insert('g', '*')
       .attr('fill', 'none')
@@ -594,12 +608,12 @@ export class ArcComponent implements OnInit {
         (d) => d.source.id.replace(/\./g, ' ') +
           ' ' +
           d.target.id.replace(/\./g, ' ') +
-          ' p' +
-          d.source.group
+          ' ' + classSuffix +
+          d.source.group.join(" " + classSuffix)
       );
   }
 
-  private createGraphLabels(nodes: any, y: d3.ScalePoint<{ toString(): string; }>, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>) {
+  private createGraphLabels(nodes: any, classSuffix: string, y: d3.ScalePoint<{ toString(): string; }>, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>) {
     return this.svg
       .append('g')
       .attr('font-family', 'sans-serif')
@@ -612,22 +626,86 @@ export class ArcComponent implements OnInit {
         'transform',
         (d) => `translate(${this.margin.left * 2},${(d.y = y(d.id))})`
       )
-      .call((g) => g
-        .append('text')
-        .attr('x', -6)
-        .attr('dy', '0.35em')
-        .attr('class', (d) => d.id.replace(/\./g, ' ') + ' p' + d.group)
-        .attr('fill', (d) => d3.lab(color(d.group)))
-        .text((d) => d.id)
+      .attr(
+        'class',
+        (d) =>
+          'node ' +
+          d.id.replace(/\./g, '') +
+          ' ' +
+          classSuffix +
+          d.group.join(' ' + classSuffix)
       )
-      .call((g) => g
-        .append('circle')
-        .attr('r', 3)
-        .attr('class', (d) => d.id.replace(/\./g, ' ') + ' p' + d.group)
-        .attr('fill', (d) => color(d.group))
-      );
+
   }
 
+    //Method to create Node Arcs
+    private createNodeArcs(node: any, classSuffix: string, color: d3.ScaleOrdinal<{ toString(): string; }, string, never>) {
+      node
+      .append('text')
+      .attr('x', -10)
+      .attr('dy', '0.35em')
+      .attr(     'class',
+      (d) =>
+        d.id.replace(/\./g, '') +
+        ' ' +
+        classSuffix +
+        d.group.join(' ' + classSuffix))
+      .attr('fill', (d) => d3.lab(color(d.group)))
+      .text((d) => d.id)
+      node
+        .append('circle')
+        .attr('r', 3)
+        .attr(        'class',
+        (d) =>
+          d.id.replace(/\./g, '') +
+          ' ' +
+          classSuffix +
+          d.group.join(' ' + classSuffix))
+        .attr('fill', "#12d")
+        .each((d, i) => {
+          let pieData: pieData[] = [];
+          d.group.forEach((element) => {
+            pieData.push({
+              color: color(element),
+              value: 1 / d.group.length,
+            });
+          });
+          let arcData = this.pie(pieData);
+          let index: number = i;
+          let selectedNode = node.filter((d, i) => {
+            return i === index;
+          });
+          selectedNode
+            .selectAll()
+            .data(arcData)
+            .enter()
+            .append('path')
+            .attr('fill', (d) => d.data.color)
+            .attr('d', this.groupArc)
+            .attr("class", `${classSuffix}arcs`);
+        });
+    }
+    private update(nodes: any, y:any, label:any,path: any, overlay: any) {
+      y.domain(nodes.sort((a, b) => a.group - b.group || d3.ascending(a.id, b.id)).map(d => d.id));
+  
+      const t = this.svg.transition()
+          .duration(750);
+  
+      label.transition(t)
+          .delay((d, i) => i * 20)
+          .attrTween("transform", d => {
+            const i = d3.interpolateNumber(d.y, y(d.id));
+            return t => `translate(${this.margin.left * 2},${d.y = i(t)})`;
+          });
+  
+      path.transition(t)
+          .duration(750 + nodes.length * 20)
+          .attrTween("d", d => () => this.arc(d, this.margin.left * 2));
+  
+      overlay.transition(t)
+          .delay((d, i) => i * 20)
+          .attr("y", d => y(d.id) - this.step / 2);
+    }
   ngOnInit(): void {
     const nodes = this.nodes.map(({ id, group }) => ({
       id,
