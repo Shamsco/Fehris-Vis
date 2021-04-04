@@ -67,13 +67,13 @@ export class ArcComponent implements OnInit {
       [1.5, 7.0]
     );
 
-    const label = this.createGraphLabels(nodes, 'p', y, color);
-    this.label = label;
-    const path = this.createGraphPath(links, 'p', color, linkWidth);
-    this.paths = path;
-    const overlay = this.createGraphOverlay(nodes, 'p', y, color);
-    this.overlay = overlay;
-    this.createNodeArcs(label, 'p', color);
+    this.label = this.createGraphLabels(nodes, 'p', y, color);
+
+    this.paths = this.createGraphPath(links, 'p', color, linkWidth);
+
+    this.overlay = this.createGraphOverlay(nodes, 'p', y, color);
+
+    this.createNodeArcs(this.label, 'p', color);
 
     //Data Pre-processing for Legend
     let groups: number[][] = nodes.map((d) => d.group);
