@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
-import { Node } from 'src/app/interface/node';
-import { Link } from 'src/app/interface/link';
 import { PieData } from 'src/app/interface/pie-data';
 import * as graphData from 'src/assets/miserables.json';
-import { GlobalVariables } from "src/app/global-variables/global";
+import { GlobalVariables } from 'src/app/global-variables/global';
+
 @Component({
   selector: 'app-arc',
   templateUrl: './arc.component.html',
   styleUrls: ['./arc.component.css'],
 })
+
 export class ArcComponent implements OnInit {
   private input: any = (graphData as any).default;
   private margin = { top: 20, right: 40, bottom: 20, left: 100 };
@@ -23,8 +23,14 @@ export class ArcComponent implements OnInit {
     this.margin.right +
     this.margin.left;
   private svg;
+
+  //Assign this colour to a link who's endpoints do not share a group
   private noMatchColour = '#aaa';
+
+  //Arcs for Multigroup representation
   private groupArc = d3.arc().innerRadius(4).outerRadius(7);
+
+  //Arcs for links between nodes
   private arc(d: any, margin: number) {
     const y1 = d.source.y;
     const y2 = d.target.y;
@@ -32,12 +38,11 @@ export class ArcComponent implements OnInit {
     return `M${margin},${y1}A${r},${r} 0,0,${y1 < y2 ? 1 : 0} ${margin},${y2}`;
   }
 
+
   private createSvg(width: number, height: number, margin: any): void {
     this.svg = d3
       .select('div#ARC')
       .append('svg')
-      // .attr('width', width - margin.left * 3)
-      // .attr('height', height + margin.left)
       .attr('viewBox', `0, 0, ${width}, ${height}`)
       .attr('transform', `translate(${-margin.left})`);
   }
@@ -77,11 +82,19 @@ export class ArcComponent implements OnInit {
     let stateArray: boolean[] = Array<boolean>(legendGroups.length).fill(false);
     const legend = this.createGraphLegend(legendGroups, 'p', color, stateArray);
 
-    const value = (a, b) => a.group - b.group || d3.ascending(a.id, b.id);
-    this.update(nodes, y, label, path, overlay, value);
+    d3.select("button#Order")
+    .on('click', d => {
+      console.log(d)
+      const value = (a, b) => a.group[0] - b.group[0] || d3.ascending(a.id, b.id);
+      this.update(nodes, y, label, path, overlay, value);
+    })
+    d3.select("button#Reset")
+    .on('click', d => {
+      console.log(d)
+      const value = (a, b) => d3.ascending(a.id, b.id);
+      this.update(nodes, y, label, path, overlay, value);
+    })
   }
-
-  constructor() {}
 
   private createGraphLegend(
     grouparr: number[],
@@ -374,12 +387,15 @@ export class ArcComponent implements OnInit {
           .attr('class', `${classSuffix}arcs`);
       });
   }
-  private update(nodes: any, y: any, label: any, path: any, overlay: any, value: any) {
-    y.domain(
-      nodes
-        .sort(value)
-        .map((d) => d.id)
-    );
+  update(
+    nodes: any,
+    y: any,
+    label: any,
+    path: any,
+    overlay: any,
+    value: any
+  ) {
+    y.domain(nodes.sort(value).map((d) => d.id));
 
     const t = this.svg.transition().duration(750);
 
@@ -401,6 +417,9 @@ export class ArcComponent implements OnInit {
       .delay((d, i) => i * 20)
       .attr('y', (d) => y(d.id) - this.step / 2);
   }
+
+  constructor() {}
+
   ngOnInit(): void {
     const nodes = this.input.nodes.map(({ id, group }) => ({
       id,
