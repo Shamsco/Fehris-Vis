@@ -23,7 +23,12 @@ export class ArcComponent implements OnInit {
     this.margin.right +
     this.margin.left;
   private svg;
-
+  private label;
+  private paths;
+  private overlay;
+  private y;
+  groupOrder = (a, b) => a.group[0] - b.group[0] || d3.ascending(a.id, b.id);
+  nameOrder = (a, b) => d3.ascending(a.id, b.id);
   //Assign this colour to a link who's endpoints do not share a group
   private noMatchColour = '#aaa';
 
@@ -56,17 +61,18 @@ export class ArcComponent implements OnInit {
       this.margin.top,
       this.height - this.margin.bottom,
     ]);
+    this.y = y;
     const linkWidth = d3.scalePoint(
       links.map((d) => d.value).sort(d3.ascending),
       [1.5, 7.0]
     );
 
     const label = this.createGraphLabels(nodes, 'p', y, color);
-
+    this.label = label;
     const path = this.createGraphPath(links, 'p', color, linkWidth);
-
+    this.paths = path;
     const overlay = this.createGraphOverlay(nodes, 'p', y, color);
-
+    this.overlay = overlay;
     this.createNodeArcs(label, 'p', color);
 
     //Data Pre-processing for Legend
@@ -82,18 +88,6 @@ export class ArcComponent implements OnInit {
     let stateArray: boolean[] = Array<boolean>(legendGroups.length).fill(false);
     const legend = this.createGraphLegend(legendGroups, 'p', color, stateArray);
 
-    d3.select("button#Order")
-    .on('click', d => {
-      console.log(d)
-      const value = (a, b) => a.group[0] - b.group[0] || d3.ascending(a.id, b.id);
-      this.update(nodes, y, label, path, overlay, value);
-    })
-    d3.select("button#Reset")
-    .on('click', d => {
-      console.log(d)
-      const value = (a, b) => d3.ascending(a.id, b.id);
-      this.update(nodes, y, label, path, overlay, value);
-    })
   }
 
   private createGraphLegend(
@@ -288,7 +282,7 @@ export class ArcComponent implements OnInit {
           ? color(d.source.group)
           : this.noMatchColour
       )
-      .attr('stroke-width', (d) => linkWidth(d.source.group))
+      .attr('stroke-width', 2)
       .attr('stroke-opacity', 0.6)
       .attr('d', (d) => this.arc(d, this.margin.left * 2))
       .attr(
@@ -388,34 +382,29 @@ export class ArcComponent implements OnInit {
       });
   }
   update(
-    nodes: any,
-    y: any,
-    label: any,
-    path: any,
-    overlay: any,
     value: any
   ) {
-    y.domain(nodes.sort(value).map((d) => d.id));
+    this.y.domain(this.input.nodes.sort(value).map((d) => d.id));
 
     const t = this.svg.transition().duration(750);
 
-    label
+    this.label
       .transition(t)
       .delay((d, i) => i * 20)
       .attrTween('transform', (d) => {
-        const i = d3.interpolateNumber(d.y, y(d.id));
+        const i = d3.interpolateNumber(d.y, this.y(d.id));
         return (t) => `translate(${this.margin.left * 2},${(d.y = i(t))})`;
       });
 
-    path
+    this.paths
       .transition(t)
-      .duration(750 + nodes.length * 20)
+      .duration(750 + this.input.nodes.length * 20)
       .attrTween('d', (d) => () => this.arc(d, this.margin.left * 2));
 
-    overlay
+    this.overlay
       .transition(t)
       .delay((d, i) => i * 20)
-      .attr('y', (d) => y(d.id) - this.step / 2);
+      .attr('y', (d) => this.y(d.id) - this.step / 2);
   }
 
   constructor() {}
