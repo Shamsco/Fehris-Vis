@@ -14,7 +14,9 @@ import { GlobalVariables } from "src/app/global-variables/global";
 export class DisjointedGraphComponent implements OnInit {
 
   private input : any = (graphData as any).default;
-  public checked: boolean = false;
+  private linkWidth;
+  public gChecked: boolean = false;
+  public lChecked: boolean = false;
   private height: number = 680;
   private width: number = 680;
   private color = d3.scaleOrdinal(
@@ -172,7 +174,7 @@ export class DisjointedGraphComponent implements OnInit {
 
     // Graph Links
     const link = this.createLinks(svg, links, 'm');
-
+    this.linkWidth = link;
     //Container for Tooltip
     const div = this.createTooltipWindow('div#Disjointed');
 
@@ -267,10 +269,15 @@ export class DisjointedGraphComponent implements OnInit {
   }
   //Toggles Group view
   showGroups() {
-    d3.selectAll(".marcs").attr("visibility", this.checked? "hidden":"visible")
-    d3.selectAll(".gGroup").attr("visibility", this.checked? "hidden":"visible")
+    d3.selectAll(".marcs").attr("visibility", this.gChecked? "hidden":"visible")
+    d3.selectAll(".gGroup").attr("visibility", this.gChecked? "hidden":"visible")
   }
 
+
+  //Toggles Link View
+  showLinks(){
+    this.linkWidth.attr("stroke-width", d => this.lChecked? "2" : Math.sqrt(d.source.group[0] + 1))
+  }
   //Method to create an SVG
   private createSVG(
     selection: string,
@@ -331,7 +338,7 @@ export class DisjointedGraphComponent implements OnInit {
       .selectAll('line')
       .data(links)
       .join('line')
-      .attr('stroke-width', (d) => Math.sqrt(d.value))
+      .attr('stroke-width', "2")
       .attr(
         'class',
         (d) =>
