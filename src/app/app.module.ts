@@ -12,8 +12,10 @@ import { ForceDirectedComponent } from './force-directed/force-directed.componen
 import { TestArcComponent } from './test-arc/test-arc.component';
 import { DisjointedGraphComponent } from './disjointed-graph/disjointed-graph.component';
 import { GraphViewComponent } from './graph-view/graph-view.component';
-
-
+import {MatButtonModule} from '@angular/material/button';
+import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import { FormsModule } from '@angular/forms';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 const routes: Routes = [];
 
 
@@ -32,6 +34,10 @@ const routes: Routes = [];
   imports: [
     BrowserModule,
     HttpClientModule,
+    MatButtonModule,
+    MatSlideToggleModule,
+    BrowserAnimationsModule,
+    FormsModule,
     RouterModule.forRoot(routes)
   ],
   providers: [DataServiceService],

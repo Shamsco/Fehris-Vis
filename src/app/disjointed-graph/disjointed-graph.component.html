@@ -1,3 +1,5 @@
 <h2>Disjointed Chart</h2>
-<figure id="Disjointed"></figure>
-<!-- <svg width="1000" height="1000"viewbox="0,0,1,1" id="Disjointed"></svg> -->
+<div id="Disjointed">
+    <mat-slide-toggle [(ngModel)]="gChecked" (click)="showGroups()">Groups</mat-slide-toggle>
+    <mat-slide-toggle [(ngModel)]="lChecked" (click)="showLinks()">Links</mat-slide-toggle>
+</div>
