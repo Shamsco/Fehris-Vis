@@ -19,8 +19,8 @@ export class DisjointedGraphComponent implements OnInit {
   private arcRadius: number = 8;
   public gChecked: boolean = false;
   public lChecked: boolean = false;
-  private height: number = 680;
-  private width: number = 680;
+  private height: number = 300;
+  private width: number = 650;
   private color = d3.scaleOrdinal(
     this.input.nodes.map((d) => d.group[0]).sort(d3.ascending),
     d3.schemeCategory10
@@ -91,7 +91,7 @@ export class DisjointedGraphComponent implements OnInit {
     const svg = this.createSVGWithWidthAndHeight(
       'div.nodeTooltip',
       'preview',
-      this.height / 4,
+      this.height / 2,
       this.width / 4
     );
 
@@ -190,8 +190,8 @@ export class DisjointedGraphComponent implements OnInit {
         .transition()
         .duration(200)
         .style('opacity', 0.9)
-        .style('left', event.pageX + this.width / 8 + 'px')
-        .style('top', event.pageY - this.height / 3 + 'px');
+        .style('left', event.pageX + 'px')
+        .style('top', event.pageY - (this.height + 20 ) / 2 + 'px');
       d3.selectAll('.preview').remove();
       d3.selectAll('.pactive').classed('pactive', false);
       svg.selectAll(`.${d.id.replace(/\./g, '')}`).classed('pactive', true);
@@ -383,7 +383,7 @@ export class DisjointedGraphComponent implements OnInit {
       .attr('class', 'tooltip nodeTooltip')
       .style('opacity', 0)
       .attr('width', this.width / 4)
-      .attr('height', this.height / 4);
+      .attr('height', this.height / 2);
   }
   //Method to update the Graph simulation
   private graphUpdates(
