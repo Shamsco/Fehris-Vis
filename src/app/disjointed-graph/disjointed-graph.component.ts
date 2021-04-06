@@ -15,6 +15,8 @@ export class DisjointedGraphComponent implements OnInit {
 
   private input : any = (graphData as any).default;
   private linkWidth;
+  private nodeRadius: number = 5;
+  private arcRadius: number = 8;
   public gChecked: boolean = false;
   public lChecked: boolean = false;
   private height: number = 680;
@@ -23,7 +25,7 @@ export class DisjointedGraphComponent implements OnInit {
     this.input.nodes.map((d) => d.group[0]).sort(d3.ascending),
     d3.schemeCategory10
   );
-  private arc = d3.arc().innerRadius(5).outerRadius(8);
+  private arc = d3.arc().innerRadius(this.nodeRadius).outerRadius(this.arcRadius);
   private drag = (simulation) => {
     function dragstarted(event, d) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -157,6 +159,7 @@ export class DisjointedGraphComponent implements OnInit {
         d3.forceLink<Node, Link>(links).id((d) => d.id)
       )
       .force('charge', d3.forceManyBody())
+      .force("collision",d3.forceCollide().radius(this.arcRadius))
       .force('x', d3.forceX())
       .force('y', d3.forceY())
       .velocityDecay(0.5);
@@ -215,14 +218,14 @@ export class DisjointedGraphComponent implements OnInit {
     
     legendGroups = [... new Set(legendGroups)]
     let stateArray: boolean[] = Array<boolean>(legendGroups.length).fill(false);
-    const legend = this.createGroupLegend(svg, legendGroups, stateArray, node, 'm');
+    const legend = this.createGroupLegend(svg, legendGroups, stateArray, node, link, 'm');
     d3.selectAll(".marcs").attr("visibility","hidden")
     d3.selectAll(".gGroup").attr("visibility","hidden")
   }
 
   constructor() {}
   //Method to create the Legend
-  private createGroupLegend(svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>, grouparr: number[], stateArray: boolean[], node: any, classSuffix: string) {
+  private createGroupLegend(svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>, grouparr: number[], stateArray: boolean[], node: any, link: any,classSuffix: string) {
     return svg
       .append('g')
       .attr('fill', 'none')
@@ -253,17 +256,27 @@ export class DisjointedGraphComponent implements OnInit {
         .attr('class', (d) => classSuffix + d)
         .attr('fill', (d) => this.color(d))
       )
+      .on('mouseover', (event, d) => {
+        svg.selectAll(`text.${classSuffix + d}`).classed('hover', true);
+      })
+      .on('mouseout', (event, d) => {
+        svg.selectAll(`text.${classSuffix + d}`).classed('hover', false);
+      })
       .on('click', (event, d) => {
         if (stateArray[d] === true) {
           stateArray[d] = false;
           svg.selectAll(`.${classSuffix + d}`).classed('gactive', false);
-          node.selectAll(`circle.${classSuffix + d}`).classed('classic', true);
-          node.selectAll(`circle.${classSuffix + d}`).classed('gactive', false);
+          svg.selectAll(`line:not(.${classSuffix + d})`).classed('inactive', false);
+          svg.selectAll(`circle:not(.${classSuffix + d})`).classed('inactive', false);
+          svg.selectAll(`path:not(.${classSuffix + d})`).classed('inactive', false);
+          svg.selectAll(`text:not(.${classSuffix + d})`).classed('inactive', false);
         } else if (stateArray[d] === false) {
           stateArray[d] = true;
           svg.selectAll(`.${classSuffix + d}`).classed('gactive', true);
-          node.selectAll(`circle.${classSuffix + d}`).classed('gactive', true);
-          node.selectAll(`circle.${classSuffix + d}`).classed('classic', false);
+          svg.selectAll(`line:not(.${classSuffix + d})`).classed('inactive', true);
+          svg.selectAll(`circle:not(.${classSuffix + d})`).classed('inactive', true);
+          svg.selectAll(`path:not(.${classSuffix + d})`).classed('inactive', true);
+          svg.selectAll(`text:not(.${classSuffix + d})`).classed('inactive', true);
         }
       });
   }
@@ -298,6 +311,10 @@ export class DisjointedGraphComponent implements OnInit {
   //Method to style the SVG
   private styleSVG(svg: any) {
     svg.append('style').text(`
+        text.hover {
+          font-size: 25;
+          font-weight: bold;
+        }
         line.pactive {
           stroke: #000;
           stroke-opacity: 1;
@@ -310,14 +327,21 @@ export class DisjointedGraphComponent implements OnInit {
           stroke-opacity: 1;
         } 
         circle.gactive{
-          fill: #fff;
+          fill: #FFD700;
         }
         text.gactive{
           font-weight: bold;
-          font-size: 15;
+          font-size: 25;
         }
         circle.classic{
           fill: #12b
+        }
+        .inactive {
+          fill: #808080;
+          opacity: 0.4;
+        }
+        line.inactive {
+          stroke-opacity: 0.4;
         }
         div.tooltip {	
           position: absolute;					
@@ -338,7 +362,7 @@ export class DisjointedGraphComponent implements OnInit {
       .selectAll('line')
       .data(links)
       .join('line')
-      .attr('stroke-width', "2")
+      .attr('stroke-width', "1")
       .attr(
         'class',
         (d) =>
@@ -424,7 +448,7 @@ export class DisjointedGraphComponent implements OnInit {
   private createNodeArcs(node: any, classSuffix: string) {
     node
       .append('circle')
-      .attr('r', 5)
+      .attr('r', this.nodeRadius)
       .attr(
         'class',
         (d) =>
@@ -438,6 +462,7 @@ export class DisjointedGraphComponent implements OnInit {
         let pieData: PieData[] = [];
         d.group.forEach((element) => {
           pieData.push({
+            group: element,
             color: this.color(element),
             value: 1 / d.group.length,
           });
@@ -454,7 +479,7 @@ export class DisjointedGraphComponent implements OnInit {
           .append('path')
           .attr('fill', (d) => d.data.color)
           .attr('d', this.arc)
-          .attr("class", `${classSuffix}arcs`);
+          .attr("class", d =>`${classSuffix + d.data.group} ${classSuffix}arcs`);
       });
     node.append('title').text((d) => d.id);
   }

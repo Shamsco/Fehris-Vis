@@ -362,6 +362,7 @@ export class ArcComponent implements OnInit {
         let pieData: PieData[] = [];
         d.group.forEach((element) => {
           pieData.push({
+            group: element,
             color: color(element),
             value: 1 / d.group.length,
           });
