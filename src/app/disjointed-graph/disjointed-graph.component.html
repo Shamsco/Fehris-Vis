@@ -1,5 +1,20 @@
 <h2>Disjointed Chart</h2>
-<div id="Disjointed">
-    <mat-slide-toggle [(ngModel)]="gChecked" (click)="showGroups()">Groups</mat-slide-toggle>
-    <mat-slide-toggle [(ngModel)]="lChecked" (click)="showLinks()">Links</mat-slide-toggle>
+<div position="relative" id="Disjointed">
+    <div class="toolbar">
+        <mat-slide-toggle [(ngModel)]="gChecked" (click)="showGroups()">Groups</mat-slide-toggle>
+        <mat-slide-toggle [(ngModel)]="lChecked" (click)="showLinks()">Links</mat-slide-toggle>
+    </div>
 </div>
+
+<style>
+    div.toolbar {
+        position: absolute;
+        padding: 2px;
+        background: #aaa;
+        border: 0px;
+        border-radius: 8px;
+        pointer-events: auto;
+        top: 1000 px;
+        right: 200 px;
+    }
+</style>
