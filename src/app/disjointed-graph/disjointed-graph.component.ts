@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ComponentFactoryResolver, OnInit, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
 import { Node } from 'src/app/interface/node';
 import { Link } from 'src/app/interface/link';
@@ -293,29 +293,29 @@ export class DisjointedGraphComponent implements OnInit {
       .on('click', (event, d) => {
         if (stateArray[d] === true) {
           stateArray[d] = false;
-          svg.selectAll(`.${classSuffix + d}`).classed('gactive', false);
-          svg
-            .selectAll(`line:not(.${classSuffix + d})`)
-            .classed('inactive', false);
-          svg
-            .selectAll(`circle:not(.${classSuffix + d})`)
-            .classed('inactive', false);
-          svg
-            .selectAll(`path:not(.${classSuffix + d})`)
-            .classed('inactive', false);
         } else if (stateArray[d] === false) {
           stateArray[d] = true;
-          svg.selectAll(`.${classSuffix + d}`).classed('gactive', true);
-          svg
-            .selectAll(`line:not(.${classSuffix + d})`)
-            .classed('inactive', true);
-          svg
-            .selectAll(`circle:not(.${classSuffix + d})`)
-            .classed('inactive', true);
-          svg
-            .selectAll(`path:not(.${classSuffix + d})`)
-            .classed('inactive', true);
         }
+        if(stateArray.includes(true)){
+          console.log("includes")
+          stateArray.forEach((element, key) => {
+            if (element){
+            svg.selectAll(`.${classSuffix + key}`).classed('gactive', true);
+            svg.selectAll(`.${classSuffix + key}`).classed('inactive', false);
+            }
+            else {
+            svg.selectAll(`.${classSuffix + key}`).classed('gactive', false);
+            svg.selectAll(`.${classSuffix + key}`).classed('inactive', true);
+            }
+          })
+        }
+        else {
+          stateArray.forEach((element, key) => {
+            svg.selectAll(`.${classSuffix + key}`).classed('gactive', false);
+            svg.selectAll(`.${classSuffix + key}`).classed('inactive', false);
+          })
+        }
+
       });
   }
   //Toggles Group view
@@ -473,10 +473,7 @@ export class DisjointedGraphComponent implements OnInit {
         'class',
         (d) =>
           'node ' +
-          d.id.replace(/\./g, '') +
-          ' ' +
-          classSuffix +
-          d.group.join(' ' + classSuffix)
+          d.id.replace(/\./g, '') 
       )
       .call(this.drag(simulation))
       .on('mouseover', (event, d) => {
