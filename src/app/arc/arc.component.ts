@@ -146,7 +146,7 @@ export class ArcComponent implements OnInit {
             .attr('font-weight', 'none')
             .attr('font-size', 10);
         } else if (stateArray[d] === false) {
-          d3.selectAll(`path:not(.${classSuffix + d})`).attr(
+          this.svg.selectAll(`path:not(.${classSuffix + d})`).attr(
             'visibility',
             'hidden'
           );
@@ -362,6 +362,7 @@ export class ArcComponent implements OnInit {
         let pieData: PieData[] = [];
         d.group.forEach((element) => {
           pieData.push({
+            group: element,
             color: color(element),
             value: 1 / d.group.length,
           });

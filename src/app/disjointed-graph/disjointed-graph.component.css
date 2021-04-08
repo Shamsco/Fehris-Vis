@@ -1,0 +1,43 @@
+div.toolbar {
+    position: absolute;
+    padding: 2px;
+    background: #aaa;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: auto;
+    top: 1000 px;
+    right: 200 px;
+}
+text.hover {
+    font-size: 25;
+    font-weight: bold;
+  }
+  line:hover{
+    stroke: #000;
+    stroke-opacity: 1;
+  }
+  line.pactive {
+    stroke: #000;
+    stroke-opacity: 1;
+  } 
+  circle.pactive{
+    stroke: #000;
+  }
+  line.gactive {
+    stroke: #000;
+    stroke-opacity: 1;
+  } 
+  text.gactive{
+    font-weight: bold;
+    font-size: 25;
+  }
+  circle.classic{
+    fill: #12b
+  }
+  .inactive {
+    fill: #808080;
+    opacity: 0.4;
+  }
+  line.inactive {
+    stroke-opacity: 0.4;
+  }
