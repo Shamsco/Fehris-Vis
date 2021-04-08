@@ -20,6 +20,7 @@ export class DisjointedGraphComponent implements OnInit {
   public lChecked: boolean = false;
   private height: number = 300;
   private width: number = 650;
+  private legendScale: number = 2;
   private color = d3.scaleOrdinal(
     this.input.nodes.map((d) => d.group[0]).sort(d3.ascending),
     d3.schemeCategory10
@@ -191,8 +192,8 @@ export class DisjointedGraphComponent implements OnInit {
         .transition()
         .duration(200)
         .style('opacity', 0.9)
-        .style('left', event.pageX + 'px')
-        .style('top', event.pageY - (this.height + 20) / 2 + 'px');
+        .style('left', event.x + 'px')
+        .style('top', event.y - this.height+ 'px');
       d3.selectAll('.preview').remove();
       d3.selectAll('.pactive').classed('pactive', false);
       svg.selectAll(`.${d.id.replace(/\./g, '')}`).classed('pactive', true);
@@ -219,15 +220,21 @@ export class DisjointedGraphComponent implements OnInit {
 
     legendGroups = [...new Set(legendGroups)];
     let stateArray: boolean[] = Array<boolean>(legendGroups.length).fill(false);
+    const groupSVG = d3.select("div#Groups")
+    .append('svg')
+    .attr('width', this.legendScale * (60))
+    .attr('height', this.legendScale * (legendGroups.length * 10 + 10) )
+    .attr('viewBox', `0, 0, ${40}, ${legendGroups.length * 10 + 10 }`)
+    .attr('class', "m")
     const legend = this.createGroupLegend(
-      svg,
+      groupSVG,
       legendGroups,
       stateArray,
       node,
       link,
       'm'
     );
-    d3.selectAll('.gGroup').attr('visibility', 'hidden');
+    //d3.selectAll('.gGroup').attr('visibility', 'hidden');
 
     var zoomFn = d3.zoom().on('zoom', function (event, d) {
       //svg.selectAll("g").attr('transform', event.transform);
@@ -244,7 +251,7 @@ export class DisjointedGraphComponent implements OnInit {
   constructor() {}
   //Method to create the Legend
   private createGroupLegend(
-    svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>,
+    svg: any,
     grouparr: number[],
     stateArray: boolean[],
     node: any,
@@ -266,7 +273,7 @@ export class DisjointedGraphComponent implements OnInit {
       .attr(
         'transform',
         (d) =>
-          `translate(${-this.width / 2 + 10},${-this.height / 4 + d * 10 + 5})`
+          `translate(0,${d * 10 + 5})`
       )
       .call((g) =>
         g
@@ -285,10 +292,10 @@ export class DisjointedGraphComponent implements OnInit {
           .attr('fill', (d) => this.color(d))
       )
       .on('mouseover', (event, d) => {
-        svg.selectAll(`text.${classSuffix + d}`).classed('hover', true);
+        d3.selectAll(`text.${classSuffix + d}`).classed('hover', true);
       })
       .on('mouseout', (event, d) => {
-        svg.selectAll(`text.${classSuffix + d}`).classed('hover', false);
+        d3.selectAll(`text.${classSuffix + d}`).classed('hover', false);
       })
       .on('click', (event, d) => {
         if (stateArray[d] === true) {
@@ -300,19 +307,19 @@ export class DisjointedGraphComponent implements OnInit {
           console.log("includes")
           stateArray.forEach((element, key) => {
             if (element){
-            svg.selectAll(`.${classSuffix + key}`).classed('gactive', true);
-            svg.selectAll(`.${classSuffix + key}`).classed('inactive', false);
+            d3.selectAll(`.${classSuffix + key}`).classed('gactive', true);
+            d3.selectAll(`.${classSuffix + key}`).classed('inactive', false);
             }
             else {
-            svg.selectAll(`.${classSuffix + key}`).classed('gactive', false);
-            svg.selectAll(`.${classSuffix + key}`).classed('inactive', true);
+            d3.selectAll(`.${classSuffix + key}`).classed('gactive', false);
+            d3.selectAll(`.${classSuffix + key}`).classed('inactive', true);
             }
           })
         }
         else {
           stateArray.forEach((element, key) => {
-            svg.selectAll(`.${classSuffix + key}`).classed('gactive', false);
-            svg.selectAll(`.${classSuffix + key}`).classed('inactive', false);
+            d3.selectAll(`.${classSuffix + key}`).classed('gactive', false);
+            d3.selectAll(`.${classSuffix + key}`).classed('inactive', false);
           })
         }
 
@@ -328,7 +335,7 @@ export class DisjointedGraphComponent implements OnInit {
       'visibility',
       this.gChecked ? 'hidden' : 'visible'
     );
-    d3.selectAll('.gGroup').attr(
+    d3.selectAll('#Groups').style(
       'visibility',
       this.gChecked ? 'hidden' : 'visible'
     );

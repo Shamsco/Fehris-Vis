@@ -67,13 +67,13 @@ export class ArcComponent implements OnInit {
       [1.5, 7.0]
     );
 
-    this.label = this.createGraphLabels(nodes, 'p', y, color);
+    this.label = this.createGraphLabels(nodes, 'a', y, color);
 
-    this.paths = this.createGraphPath(links, 'p', color, linkWidth);
+    this.paths = this.createGraphPath(links, 'a', color, linkWidth);
 
-    this.overlay = this.createGraphOverlay(nodes, 'p', y, color);
+    this.overlay = this.createGraphOverlay(nodes, 'a', y, color);
 
-    this.createNodeArcs(this.label, 'p', color);
+    this.createNodeArcs(this.label, 'a', color);
 
     //Data Pre-processing for Legend
     let groups: number[][] = nodes.map((d) => d.group);
@@ -86,7 +86,7 @@ export class ArcComponent implements OnInit {
 
     legendGroups = [...new Set(legendGroups)];
     let stateArray: boolean[] = Array<boolean>(legendGroups.length).fill(false);
-    const legend = this.createGraphLegend(legendGroups, 'p', color, stateArray);
+    const legend = this.createGraphLegend(legendGroups, 'a', color, stateArray);
 
   }
 

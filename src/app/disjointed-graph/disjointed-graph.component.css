@@ -5,8 +5,19 @@ div.toolbar {
     border: 0px;
     border-radius: 8px;
     pointer-events: auto;
-    top: 1000 px;
-    right: 200 px;
+}
+div#Disjointed{
+    position: relative; 
+}
+div#Groups{
+    position: absolute;
+    padding: 2px;
+    border: 2px;
+    border-style:solid;
+    border-color: rgb(0, 5, 53);
+    border-radius: 8px;
+    pointer-events: none;
+    top: 30px;
 }
 text.hover {
     font-size: 25;
