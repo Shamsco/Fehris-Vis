@@ -204,7 +204,7 @@ export class DisjointedGraphComponent implements OnInit {
 
     // Add Title to Nodes
 
-    // Position updates for Graph
+    // Position updates for Main Graph
     this.graphUpdates(simulation, link, node);
 
     // Legend
@@ -439,7 +439,7 @@ export class DisjointedGraphComponent implements OnInit {
       .attr('width', this.width / 4)
       .attr('height', this.height / 2);
   }
-  //Method to update the Graph simulation
+  //Method to update the position of the Nodes using D3 simulation
   private graphUpdates(
     simulation: d3.Simulation<any, undefined>,
     link: any,
