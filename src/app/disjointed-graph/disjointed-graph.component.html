@@ -1,10 +1,24 @@
 <h2>Disjointed Chart</h2>
 <div id="Disjointed">
-    <div class="toolbar">
+    <div style="text-align: left;"class="toolbar">
         <mat-slide-toggle [(ngModel)]="gChecked" (click)="showGroups()">Groups</mat-slide-toggle>
         <mat-slide-toggle [(ngModel)]="lChecked" (click)="showLinks()">Links</mat-slide-toggle>
+        <br>
+        <mat-button-toggle-group  name="groupSelector" aria-label="Group Selector" value="Multi">
+            <mat-button-toggle value="Single">Single Group</mat-button-toggle>
+            <mat-button-toggle value="Multi">All Groups</mat-button-toggle>
+        </mat-button-toggle-group>
     </div>
-    <div id="Groups" style="visibility: hidden;">
 
-    </div>
+
+
+    <mat-form-field style="top: 100px; left: 120px;" appearance="fill">
+        <mat-label>Select a Group</mat-label>
+        <mat-select [(value)]="selected">
+            <mat-option (click)="selectSingleGroup('None', 'm')">None</mat-option>
+            <mat-option *ngFor="let group of legendGroups"  (click)="selectSingleGroup(group, 'm')" [value]="group">Group {{ group }}</mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <div id="Groups" style="visibility: hidden"></div>
 </div>

@@ -16,6 +16,8 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MatSelectModule} from '@angular/material/select';
 const routes: Routes = [];
 
 
@@ -38,6 +40,8 @@ const routes: Routes = [];
     MatSlideToggleModule,
     BrowserAnimationsModule,
     FormsModule,
+    MatSelectModule,
+    MatButtonToggleModule,
     RouterModule.forRoot(routes)
   ],
   providers: [DataServiceService],

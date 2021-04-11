@@ -19,6 +19,11 @@ export class DisjointedGraphComponent implements OnInit {
   public gChecked: boolean = false;
   public lChecked: boolean = false;
   private height: number = 300;
+  private groups: number[][];
+  private svg;
+  legendGroups: number[];
+  stateArray: boolean[];
+  selected = '';
   private width: number = 650;
   private legendScale: number = 2;
   private color = d3.scaleOrdinal(
@@ -96,7 +101,7 @@ export class DisjointedGraphComponent implements OnInit {
       this.height / 2,
       this.width / 4
     );
-
+    
     // Rect for Close button
     d3.select('.preview')
       .append('rect')
@@ -173,7 +178,7 @@ export class DisjointedGraphComponent implements OnInit {
       this.height,
       this.width
     );
-
+    this.svg = svg;
     // Main SVG styling
     this.styleSVG(svg);
 
@@ -193,7 +198,7 @@ export class DisjointedGraphComponent implements OnInit {
         .duration(200)
         .style('opacity', 0.9)
         .style('left', event.x + 'px')
-        .style('top', event.y - this.height+ 'px');
+        .style('top', event.y - this.height/2 + 'px');
       d3.selectAll('.preview').remove();
       d3.selectAll('.pactive').classed('pactive', false);
       svg.selectAll(`.${d.id.replace(/\./g, '')}`).classed('pactive', true);
@@ -209,27 +214,16 @@ export class DisjointedGraphComponent implements OnInit {
     this.graphUpdates(simulation, link, node);
 
     // Legend
-    //Data Pre-processing for Legend
-    let groups: number[][] = nodes.map((d) => d.group);
-    let legendGroups: number[] = new Array<number>();
-    groups.forEach((d) => {
-      d.forEach((value) => {
-        legendGroups.push(value);
-      });
-    });
-
-    legendGroups = [...new Set(legendGroups)];
-    let stateArray: boolean[] = Array<boolean>(legendGroups.length).fill(false);
     const groupSVG = d3.select("div#Groups")
     .append('svg')
     .attr('width', this.legendScale * (60))
-    .attr('height', this.legendScale * (legendGroups.length * 10 + 10) )
-    .attr('viewBox', `0, 0, ${40}, ${legendGroups.length * 10 + 10 }`)
+    .attr('height', this.legendScale * (this.legendGroups.length * 10 + 10) )
+    .attr('viewBox', `0, 0, ${40}, ${this.legendGroups.length * 10 + 10 }`)
     .attr('class', "m")
     const legend = this.createGroupLegend(
       groupSVG,
-      legendGroups,
-      stateArray,
+      this.legendGroups,
+      this.stateArray,
       node,
       link,
       'm'
@@ -298,32 +292,60 @@ export class DisjointedGraphComponent implements OnInit {
         d3.selectAll(`text.${classSuffix + d}`).classed('hover', false);
       })
       .on('click', (event, d) => {
-        if (stateArray[d] === true) {
-          stateArray[d] = false;
-        } else if (stateArray[d] === false) {
-          stateArray[d] = true;
-        }
-        if(stateArray.includes(true)){
-          console.log("includes")
-          stateArray.forEach((element, key) => {
-            if (element){
-            d3.selectAll(`.${classSuffix + key}`).classed('gactive', true);
-            d3.selectAll(`.${classSuffix + key}`).classed('inactive', false);
-            }
-            else {
-            d3.selectAll(`.${classSuffix + key}`).classed('gactive', false);
-            d3.selectAll(`.${classSuffix + key}`).classed('inactive', true);
-            }
-          })
+        
+        this.selectGroup(d, classSuffix);
+        //this.selectSingleGroup(d,classSuffix);
+      });
+  }
+  selectGroup(d: any, classSuffix: string) {
+    if (this.stateArray[d] === true) {
+      this.stateArray[d] = false;
+    } else if (this.stateArray[d] === false) {
+      this.stateArray[d] = true;
+    }
+    this.svg.selectAll(`line`).classed('inactive', true);
+    this.svg.selectAll(`path`).classed('inactive', true);
+    this.svg.selectAll(`circle`).classed('inactive', true);
+    if (this.stateArray.includes(true)) {
+      this.stateArray.forEach((element, key) => {
+        
+        if (element) {
+          d3.selectAll(`.${classSuffix + key}`).classed('gactive', true);
+          d3.selectAll(`.${classSuffix + key}`).classed('inactive', false);
         }
         else {
-          stateArray.forEach((element, key) => {
-            d3.selectAll(`.${classSuffix + key}`).classed('gactive', false);
-            d3.selectAll(`.${classSuffix + key}`).classed('inactive', false);
-          })
+          d3.selectAll(`.${classSuffix + key}`).classed('gactive', false);
         }
-
       });
+    }
+    else {
+      this.stateArray.forEach((element, key) => {
+        d3.selectAll(`.${classSuffix + key}`).classed('gactive', false);
+        d3.selectAll(`.${classSuffix + key}`).classed('inactive', false);
+      });
+    }
+  }
+  selectSingleGroup(d: any, classSuffix: string){
+    this.svg.selectAll("path").classed('gactive', false);
+    this.svg.selectAll("line").classed('gactive', false);
+    this.svg.selectAll("circle").classed('gactive', false);
+    this.svg.selectAll("path").classed('inactive', false);
+    this.svg.selectAll("line").classed('inactive', false);
+    this.svg.selectAll("circle").classed('inactive', false);
+    this.stateArray.fill(false);
+    if(d == "None"){
+
+      return
+    }
+    if (this.stateArray[d] === false) {
+      this.stateArray[d] = true;
+      this.svg.selectAll(`.${classSuffix + d}`).classed('gactive', true);
+      this.svg.selectAll(`path:not(.${classSuffix + d})`).classed('inactive', true);
+      this.svg.selectAll(`line:not(.${classSuffix + d})`).classed('inactive', true);
+      this.svg.selectAll(`circle:not(.${classSuffix + d})`).classed('inactive', true);
+    } else if (this.stateArray[d] === true) {
+      this.stateArray[d] = false;
+    }
   }
   //Toggles Group view
   showGroups() {
@@ -366,7 +388,7 @@ export class DisjointedGraphComponent implements OnInit {
   private styleSVG(svg: any) {
     svg.append('style').text(`
         text.hover {
-          font-size: 25;
+          size: 25;
           font-weight: bold;
         }
         line:hover{
@@ -546,6 +568,19 @@ export class DisjointedGraphComponent implements OnInit {
     node.append('title').text((d) => d.id);
   }
   ngOnInit(): void {
+    //Data Pre-processing for Legend
+        this.groups= this.input.nodes.map((d) => d.group);
+        this.legendGroups= new Array<number>();
+        this.groups.forEach((d) => {
+          d.forEach((value) => {
+            this.legendGroups.push(value);
+          });
+        });
+
+        
+        this.legendGroups = [...new Set(this.legendGroups)];
+        this.legendGroups = this.legendGroups.sort((a,b) => a - b)
+        this.stateArray= Array<boolean>(this.legendGroups.length).fill(false);
     this.createGraph(this.input.nodes, this.input.links);
   }
 }
