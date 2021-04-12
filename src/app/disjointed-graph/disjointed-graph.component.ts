@@ -18,6 +18,7 @@ export class DisjointedGraphComponent implements OnInit {
   private arcRadius: number = 8;
   public gChecked: boolean = false;
   public lChecked: boolean = false;
+  public viewSelection: string = '';
   private height: number = 300;
   private groups: number[][];
   private svg;
@@ -214,12 +215,11 @@ export class DisjointedGraphComponent implements OnInit {
     this.graphUpdates(simulation, link, node);
 
     // Legend
-    const groupSVG = d3.select("div#Groups")
-    .append('svg')
+    const groupSVG = d3.select("svg#MultiGroups")
     .attr('width', this.legendScale * (60))
     .attr('height', this.legendScale * (this.legendGroups.length * 10 + 10) )
     .attr('viewBox', `0, 0, ${40}, ${this.legendGroups.length * 10 + 10 }`)
-    .attr('class', "m")
+    .attr('class', "m invisible")
     const legend = this.createGroupLegend(
       groupSVG,
       this.legendGroups,
@@ -230,12 +230,12 @@ export class DisjointedGraphComponent implements OnInit {
     );
     //d3.selectAll('.gGroup').attr('visibility', 'hidden');
 
-    var zoomFn = d3.zoom().on('zoom', function (event, d) {
-      //svg.selectAll("g").attr('transform', event.transform);
-      svg.attr('transform', event.transform);
-    });
-    //svg.on("dblclick.zoom", null)
-    svg.call(zoomFn);
+    // var zoomFn = d3.zoom().on('zoom', function (event, d) {
+    //   //svg.selectAll("g").attr('transform', event.transform);
+    //   svg.attr('transform', event.transform);
+    // });
+    // //svg.on("dblclick.zoom", null)
+    // svg.call(zoomFn);
   }
   resetZoom() {
 //     zoom.scale(1);
@@ -347,26 +347,37 @@ export class DisjointedGraphComponent implements OnInit {
       this.stateArray[d] = false;
     }
   }
+
+  selectView() {
+    d3.selectAll('#MultiGroups').classed('invisible' , true);
+    d3.selectAll('#SingleGroups').classed('invisible' , true);
+    if(this.viewSelection == "Single" && this.gChecked){
+      d3.selectAll('#SingleGroups').classed('invisible' , !this.gChecked);
+      d3.selectAll('#MultiGroups').classed('invisible' , true);
+    }
+    else if ( this.viewSelection == "Multi" && this.gChecked) {
+      d3.selectAll('#MultiGroups').classed('invisible' , !this.gChecked);
+      d3.selectAll('#SingleGroups').classed('invisible' , true);
+    }
+  }
   //Toggles Group view
   showGroups() {
     d3.selectAll('.marcs').attr(
       'visibility',
-      this.gChecked ? 'hidden' : 'visible'
+      this.gChecked ?  'visible' : 'hidden'
     );
     d3.selectAll('.parcs').attr(
       'visibility',
-      this.gChecked ? 'hidden' : 'visible'
+      this.gChecked ? 'visible' : 'hidden'
     );
-    d3.selectAll('#Groups').style(
-      'visibility',
-      this.gChecked ? 'hidden' : 'visible'
-    );
+    d3.selectAll("#groupSelector").classed('invisible' , !this.gChecked);
+    this.selectView();
   }
 
   //Toggles Link View
   showLinks() {
     this.linkWidth.attr('stroke-width', (d) =>
-      this.lChecked ? '1' : Math.sqrt(d.source.group[0] + 1)
+      this.lChecked ? Math.sqrt(d.source.group[0] + 1): '1' 
     );
   }
   //Method to create an SVG
